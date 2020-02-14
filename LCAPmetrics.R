@@ -31,7 +31,6 @@ elpi <- dashboard_mry %>%
 A_G <- dashboard_mry %>%
     filter(ind == "cci",
            studentgroup == "ALL")  %>%
-
     select(cds:countyname,currstatus,currdenom ,curr_prep_agplus, curr_prep_cteplus,  curr_aprep_ag, curr_aprep_cte) %>%
     mutate(ag_cte = curr_prep_agplus + curr_prep_cteplus + curr_aprep_ag + curr_aprep_cte,
            ag_cte_perc = ag_cte/currdenom)
@@ -39,8 +38,22 @@ A_G <- dashboard_mry %>%
 # It is not possible to get the exact figure with the aggregate data available
 
 
+AP <- dashboard_mry %>%
+    filter(ind == "cci",
+           studentgroup == "ALL")  %>%
+    select(cds:countyname,currstatus,currdenom , curr_prep_apexam ) %>%
+    mutate(ap = curr_prep_apexam/currdenom)
+# Note this is percentage of cohort that passed TWO AP exams. PErcentage that passed a single one is not available on Dashboard
 
+chronic <- dashboard_mry %>%
+    filter(ind == "cci",
+           studentgroup == "ALL") %>%
+    select(cds:countyname, chronic = currstatus) 
 
+grad <- dashboard_mry %>%
+    filter(ind == "grad",
+           studentgroup == "ALL") %>%
+    select(cds:countyname, grad = currstatus) 
 
 
 ### End -----
