@@ -1,3 +1,12 @@
+# Instructions for updating in future years. 
+# Update the "Dashboard_all.rds" file from Dashboard Rproject
+# Update the year here
+yr <- 2019
+
+#
+
+
+
 
 ### Load libraries -----
 
@@ -43,7 +52,7 @@ dashboard_all <- read_rds(here("data","Dashboard_all.rds"))
 
 dashboard_mry <- dashboard_all %>% 
     filter(str_detect("Monterey",countyname),
-           year == "2019")
+           year == yr)
     
 
 ### Manipulate -----
@@ -84,7 +93,21 @@ susp <- dashboard_mry %>%
            studentgroup == "ALL") %>%
     select(cds:countyname, susp = currstatus) 
 
-indicators <- list(A_G, AP, chronic, elpi, grad, susp) %>%
+math <- dashboard_mry %>%
+    filter(ind == "math",
+           studentgroup == "ALL") %>%
+    select(cds:countyname, math = currstatus) 
+
+ela <- dashboard_mry %>%
+    filter(ind == "ela",
+           studentgroup == "ALL") %>%
+    select(cds:countyname, ela = currstatus) 
+
+
+
+# Combine all the dashboard files
+
+indicators <- list(A_G, AP, chronic, elpi, grad, susp, math, ela) %>%
     reduce( left_join)
 
 
