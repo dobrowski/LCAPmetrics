@@ -168,8 +168,12 @@ staff.mry <- staff %>%
 
 
 cred_rate <- staff.mry %>%
-    group_by(DistrictCode, SchoolCode, DistrictName, SchoolName) %>%
-    mutate(cred.rate = mean(full_cred)) 
+    group_by(DistrictCode, DistrictName) %>%
+    transmute(# cred.rate = mean(full_cred , na.rm = TRUE),
+           cred.rate.wt = weighted.mean(full_cred, FTE , na.rm = TRUE ),
+           cds = paste0(DistrictCode,"0000000")) %>%
+    ungroup() %>%
+    distinct()
 
 ## Reclass ----
 
@@ -190,7 +194,8 @@ reclass <- reclass_vroom %>%
 ### Combine all the dashboard files ----
 
 indicators <- list(   susp, math, ela, exp ,
-                      A_G, AP, chronic, elpi, grad, drop, reclass) %>%
+                      A_G, AP, chronic, elpi, grad, drop, reclass,
+                      cred_rate) %>%
     reduce( left_join)
 
 
