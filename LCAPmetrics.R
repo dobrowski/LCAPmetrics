@@ -12,7 +12,9 @@ yr <- 2019
 
 library(tidyverse)
 library(here)
+library(vroom)
 
+library(googledrive)
 
 ### Import data -------
 
@@ -48,12 +50,14 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
 )
 
 
-dashboard_all <- read_rds(here("data","Dashboard_all.rds"))
+dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://drive.google.com/open?id=1XqGRRjQaFMMVshgF0HhnL7Ch9lnxVEYD
 
 dashboard_mry <- dashboard_all %>% 
     filter(str_detect("Monterey",countyname),
            year == yr)
     
+
+
 
 ### Manipulate -----
 
@@ -103,9 +107,62 @@ ela <- dashboard_mry %>%
            studentgroup == "ALL") %>%
     select(cds:countyname, ela = currstatus) 
 
+#  Should we add the Science CAASPP scores too?  
 
 
-# Combine all the dashboard files
+## EAP 
+# % at level 3 on Math  ;  % at level 3 on ELA 
+
+
+## Middle Drop out
+
+
+## High School Drop out 
+
+grad_vroom <- vroom("data/cohort5year1819.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
+
+## Expelled 
+
+exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) %>%
+    mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
+    mutate(rate = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)
+
+## Credential Teachers
+
+# % of teachers fully credentialed AND % of teachers appropriately assigned within their credential area (2 figures)
+# 
+# % of teachers who are BOTH fully credentialed and appropriately assigned. (if they are PIP, STIP, etc. they wouldn’t be in this count)
+
+
+staff <- vroom("data/StaffSchoolFTE18.txt")
+
+cred <- vroom("data/StaffCred18.txt")
+
+
+
+staff.mry <- staff %>%
+    filter(str_detect(CountyName,"Monterey"),
+           JobClassification == "12") %>%  # Only teachers and not 10 = Administrator c("11 = Pupil services", "12 = Teacher", "25 = Non-certificated Administrator", "26 = Charter School Non-certificated Teacher", "27 = Itinerant or Pull-Out/Push-In Teacher")
+    select(-FileCreated) %>%
+    left_join(cred) %>%
+    mutate(full_cred = if_else(CredentialType == "10", TRUE, FALSE))
+
+
+cred_rate <- staff.mry %>%
+    group_by(DistrictCode, SchoolCode, DistrictName, SchoolName) %>%
+    mutate(cred.rate = mean(full_cred)) 
+
+## Reclass ----
+
+grad_vroom <- vroom("data/filesreclass19.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel"))
+
+
+group_by(year) %>%
+    transmute(`Reclassified Students` = sum(Reclass),
+              `EL Enrollment` = sum(EL))
+
+
+### Combine all the dashboard files ----
 
 indicators <- list(A_G, AP, chronic, elpi, grad, susp, math, ela) %>%
     reduce( left_join)
