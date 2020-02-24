@@ -16,6 +16,9 @@ library(vroom)
 
 library(googledrive)
 
+
+options(scipen = 999)
+
 ### Import data -------
 
 
@@ -54,9 +57,9 @@ dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://dr
 
 dashboard_mry <- dashboard_all %>% 
     filter(str_detect("Monterey",countyname),
-           year == yr)
-    
-
+           year == yr) %>%
+    mutate(cds = as.numeric(cds)) %>%
+    mutate(cds = as.character(cds))
 
 
 ### Manipulate -----
@@ -119,13 +122,29 @@ ela <- dashboard_mry %>%
 
 ## High School Drop out 
 
-grad_vroom <- vroom("data/cohort5year1819.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
+drop_vroom <- vroom("data/cohort5year1819.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
+
+
+drop <- grad_vroom  %>% 
+    mutate_at(vars(CohortStudents:DropoutRate), funs(as.numeric) ) %>%
+    filter( ReportingCategory == "TA",
+            CharterSchool =="No",
+            Dass == "All") %>%
+    mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
+    select(cds, DropoutRate)
+
 
 ## Expelled 
 
-exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) %>%
+exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
+
+exp <- exp_vroom %>%
     mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
-    mutate(rate = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)
+    mutate(exp_rate = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)  %>%
+    filter(ReportingCategory == "TA",
+           AggregateLevel == "D2") %>%  # Charter included Yes/No
+    mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
+    select(cds, exp_rate)
 
 ## Credential Teachers
 
@@ -154,17 +173,24 @@ cred_rate <- staff.mry %>%
 
 ## Reclass ----
 
-grad_vroom <- vroom("data/filesreclass19.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel"))
+reclass_vroom <- vroom("data/filesreclass19.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel"))
 
 
-group_by(year) %>%
-    transmute(`Reclassified Students` = sum(Reclass),
-              `EL Enrollment` = sum(EL))
+reclass <- reclass_vroom %>%
+    group_by(District) %>%
+    mutate(reclassified = sum(Reclass),
+           ELenroll = sum(El)) %>%
+    ungroup() %>%
+    transmute(
+           reclass_rate = reclassified/ELenroll, 
+           cds = paste0(str_sub(Cds,1,7),"0000000")  ) %>% 
+    distinct()
 
 
 ### Combine all the dashboard files ----
 
-indicators <- list(A_G, AP, chronic, elpi, grad, susp, math, ela) %>%
+indicators <- list(   susp, math, ela, exp ,
+                      A_G, AP, chronic, elpi, grad, drop, reclass) %>%
     reduce( left_join)
 
 
