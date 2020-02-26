@@ -22,17 +22,18 @@ options(scipen = 999)
 ### Import data -------
 
 
-metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",7), rep("Engagement",10) ) ,
-                  "priorities" = c(rep("Basic",3),"Standards","Access", rep("Pupil Achievement", 6), "Other Pupil Outcomes", rep("Parent Involvement",2), rep("Pupil Engagement", 5), rep("School Climate",3) ),
-                  "metrics" = c("TeachersCred","Materials","GoodRepair","Standards","BroadCourse","CAASP","A_G","ELPI","reclass","AP","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","ChronicAbs","MSdropout","HSdropout","HSgrad","susp","exp","local_other"),
-                  "source" = c(rep("dash_local",5),rep("dash",3),"dq", "dash", "dq", "local",rep("dash_local",2), "local", "dash", rep("dq",2), rep("dash",2), "dq", "dash_local"   ),
+metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
+                  "priorities" = c(rep("Basic",3),"Standards","Access", rep("Pupil Achievement", 7), "Other Pupil Outcomes", rep("Parent Involvement",2), rep("Pupil Engagement", 5), rep("School Climate",3) ),
+                  "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse","math", "ela" ,"ag_cte_perc","elpi","reclass_rate","ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","chronic","MSdropout","DropoutRate","grad","susp","exp","local_other"),
+                  "source" = c(rep("dash_local",5),rep("dash",4),"dq", "dash", "dq", "local",rep("dash_local",2), "local", "dash", rep("dq",2), rep("dash",2), "dq", "dash_local"   ),
                   "description" = c("Teachers: Fully Credentialed & Appropriately Assigned", 
                                       "Standards-aligned Instructional Materials for every student",
                                       "School Facilities in “Good Repair” per CDE’s Facility Inspection Tool (FIT)",
                                       "Implementation of all CA state standards including how ELs will access the CCSS and ELD standards", 
                                       "Students have access and are enrolled in a broad course of study (Social Science, Health, VAPA, Science, PE, World Language)",
                                       "State CAASPP assessments (ELA, CAA, Math, Science-CST/CMA/CAPA)", 
-                                      "% of pupils that have successfully completed A-G requirements or CTE pathways (Add”l Dashboard Reports)", 
+                                    "State CAASPP assessments (ELA, CAA, Math, Science-CST/CMA/CAPA)", 
+                                    "% of pupils that have successfully completed A-G requirements or CTE pathways (Add”l Dashboard Reports)", 
                                       "% of ELs who progress in English proficiency (ELPAC)",
                                       "EL reclassification rate",
                                       "% of pupils that pass AP exams with a score of 3 or higher (Add’l Dashboard Reports)",
@@ -119,6 +120,7 @@ ela <- dashboard_mry %>%
 
 ## Middle Drop out
 
+# Local educational agencies looking for information about middle school dropouts can obtain information from CALPADS snapshot report 1.14: Dropouts Count – State View (filtered for grades seven and eight)
 
 ## High School Drop out 
 
@@ -140,11 +142,11 @@ exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names
 
 exp <- exp_vroom %>%
     mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
-    mutate(exp_rate = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)  %>%
+    mutate(exp = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)  %>%
     filter(ReportingCategory == "TA",
            AggregateLevel == "D2") %>%  # Charter included Yes/No
     mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
-    select(cds, exp_rate)
+    select(cds, exp)
 
 ## Credential Teachers
 
@@ -193,7 +195,7 @@ reclass <- reclass_vroom %>%
 
 ### Combine all the dashboard files ----
 
-indicators <- list(   susp, math, ela, exp ,
+indicators <- list(   susp,exp , math, ela, 
                       A_G, AP, chronic, elpi, grad, drop, reclass,
                       cred_rate) %>%
     reduce( left_join)

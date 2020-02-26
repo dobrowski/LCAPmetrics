@@ -1,0 +1,34 @@
+---
+title: "LCAP Summary"
+author: "David Dobrowski"
+date: "2/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+
+dist <- "27661590000000"
+
+ind_dist <- indicators %>%
+    filter(cds == dist) 
+
+
+
+metrics_dist <- ind_dist %>% 
+    t() %>%
+    as.data.frame() %>%
+    transmute(metrics = row.names(.),
+           rate = as.character(V1))
+
+left_join(metrics, metrics_dist)
+
+
+```
+
+## R Markdown
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
