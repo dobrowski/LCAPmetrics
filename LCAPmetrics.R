@@ -19,20 +19,39 @@ library(googledrive)
 
 options(scipen = 999)
 
+
+`%notin%` <- Negate(`%in%`)
+
+
+round2 = function(x, digits) {
+    posneg = sign(x)
+    z = abs(x)*10^digits
+    z = z + 0.5
+    z = trunc(z)
+    z = z/10^digits
+    z*posneg
+}
+
+
+
+
+
+
+
 ### Import data -------
 
 
 metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
                   "priorities" = c(rep("Basic",3),"Standards","Access", rep("Pupil Achievement", 7), "Other Pupil Outcomes", rep("Parent Involvement",2), rep("Pupil Engagement", 5), rep("School Climate",3) ),
                   "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse","math", "ela" ,"ag_cte_perc","elpi","reclass_rate","ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","chronic","MSdropout","DropoutRate","grad","susp","exp","local_other"),
-                  "source" = c(rep("dash_local",5),rep("dash",4),"dq", "dash", "dq", "local",rep("dash_local",2), "local", "dash", rep("dq",2), rep("dash",2), "dq", "dash_local"   ),
+                  "source" = c(rep("Local Dashboard Data",5),rep("dash",4),"Dataquest", "dash", "Dataquest", "Local data",rep("Local Dashboard Data",2), "Local data", "dash", rep("Dataquest",2), rep("dash",2), "Dataquest", "Local Dashboard Data"   ),
                   "description" = c("Teachers: Fully Credentialed & Appropriately Assigned", 
                                       "Standards-aligned Instructional Materials for every student",
                                       "School Facilities in “Good Repair” per CDE’s Facility Inspection Tool (FIT)",
                                       "Implementation of all CA state standards including how ELs will access the CCSS and ELD standards", 
                                       "Students have access and are enrolled in a broad course of study (Social Science, Health, VAPA, Science, PE, World Language)",
-                                      "State CAASPP assessments (ELA, CAA, Math, Science-CST/CMA/CAPA)", 
-                                    "State CAASPP assessments (ELA, CAA, Math, Science-CST/CMA/CAPA)", 
+                                      "State CAASPP assessments (Math)", 
+                                    "State CAASPP assessments (ELA)", 
                                     "% of pupils that have successfully completed A-G requirements or CTE pathways (Add”l Dashboard Reports)", 
                                       "% of ELs who progress in English proficiency (ELPAC)",
                                       "EL reclassification rate",
@@ -66,7 +85,14 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                   "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant or push-in/pull-out teachers. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status" ,
                                rep("",6) ,
                                "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available",
-                               rep("",15)
+                               rep("",2),
+                               "Please note this is percentage of cohort that passed TWO AP exams. Percentage that passed a single one is not available on Dashboard",
+                               rep("",6),
+                               "Please note LEAs can find middle school dropouts information from CALPADS snapshot report 1.14: Dropouts Count – State View (filtered for grades seven and eight)",
+                               rep("",3),
+                               "Please note this is a rate per thousand students.",
+                               ""
+                               
                       )
 
 )
@@ -95,7 +121,7 @@ A_G <- dashboard_mry %>%
     filter(ind == "cci",
            studentgroup == "ALL") %>%
     mutate(ag_cte = curr_prep_agplus + curr_prep_cteplus + curr_aprep_ag + curr_aprep_cte,
-           ag_cte_perc = ag_cte/currdenom) %>%
+           ag_cte_perc = ag_cte*100/currdenom) %>%
     select(cds:countyname,ag_cte_perc) 
 # Note, this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. 
 # It is not possible to get the exact figure with the aggregate data available
@@ -104,7 +130,7 @@ A_G <- dashboard_mry %>%
 AP <- dashboard_mry %>%
     filter(ind == "cci",
            studentgroup == "ALL") %>%
-    mutate(ap = curr_prep_apexam/currdenom) %>%
+    mutate(ap = (curr_prep_apexam/currdenom) %>% round2(3)*100) %>%
     select(cds:countyname,ap ) 
 # Note this is percentage of cohort that passed TWO AP exams. PErcentage that passed a single one is not available on Dashboard
 
@@ -164,7 +190,7 @@ exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names
 
 exp <- exp_vroom %>%
     mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
-    mutate(exp = UnduplicatedCountOfStudentsExpelledTotal/CumulativeEnrollment)  %>%
+    mutate(exp = (UnduplicatedCountOfStudentsExpelledTotal*1000/CumulativeEnrollment)%>% round2(3) )  %>%
     filter(ReportingCategory == "TA",
            AggregateLevel == "D2") %>%  # Charter included Yes/No
     mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
@@ -193,11 +219,11 @@ staff.mry <- staff %>%
 
 cred_rate <- staff.mry %>%
     group_by(DistrictCode, DistrictName) %>%
-    transmute(# cred.rate = mean(full_cred , na.rm = TRUE),
-           cred.rate.wt = weighted.mean(full_cred, FTE , na.rm = TRUE ),
+    transmute(cred.rate.wt = weighted.mean(full_cred, FTE , na.rm = TRUE ),
            cds = paste0(DistrictCode,"0000000")) %>%
     ungroup() %>%
-    distinct()
+    distinct() %>%
+    mutate(cred.rate.wt = cred.rate.wt %>% round2(3)*100)
 
 ## Reclass ----
 
@@ -210,7 +236,7 @@ reclass <- reclass_vroom %>%
            ELenroll = sum(El)) %>%
     ungroup() %>%
     transmute(
-           reclass_rate = reclassified/ELenroll, 
+           reclass_rate = (reclassified*100/ELenroll) %>% round2(1), 
            cds = paste0(str_sub(Cds,1,7),"0000000")  ) %>% 
     distinct()
 

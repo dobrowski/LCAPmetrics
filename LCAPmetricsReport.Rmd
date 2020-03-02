@@ -1,8 +1,7 @@
 ---
-title: "LCAP Summary"
-author: "David Dobrowski"
-date: "2/26/2020"
 output: html_document
+params:
+    dist: "27661590000000"
 ---
 
 ```{r setup, include=FALSE}
@@ -10,9 +9,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 library(tidyverse)
 library(glue)
+library(here)
 library(knitr)
 
-dist <- "27661590000000"
+
+dist <- params$dist
 
 indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
@@ -28,10 +29,19 @@ metrics_dist <- ind_dist %>%
     transmute(metrics = row.names(.),
            rate = as.character(V1))
 
-joinder <- left_join(metrics, metrics_dist)
+joinder <- left_join(metrics, metrics_dist) %>%
+    mutate(sentence = if_else(is.na(rate),
+                              glue('The "{description}" is unavailable in public data sets.  It can be located in {source}.{notes}'),
+                              glue('The "{description}" is {rate} based on data from {website}. {notes}')
+    )
+    )
 
+write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
 ```
+
+This report was run at `r Sys.time()`
+
 
 # `r metrics_dist[18,2]`
 
@@ -40,36 +50,13 @@ joinder <- left_join(metrics, metrics_dist)
 The `r joinder[row,'description'] %>% simplify()` is `r joinder[row,'rate'] %>% simplify()` based on data from `r joinder[row,'website'] %>% simplify()`.
 
 
-
-```{r purrr, include=FALSE}
-
-joinder2 <- joinder %>%
-    mutate(sentence = if_else(is.na(rate),
-                              glue('The "{description}" is unable.  It can be located in {source}.'),
-                              glue('The "{description}" is {rate} based on data from {website}. {notes}.')
-    )
-    )
-
-i <- 2
-
-```
-
-## `r joinder[1,'priority_area']` 
-
-### `r joinder[1,'priorities']` 
-
-`r joinder2[1,'sentence']` 
-
-```{r children, child='child.Rmd'}
-
-```
-
-
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
 
 out = NULL
 
-for(i in 1:10) {
+
+
+for(i in 1:nrow(joinder)) {
     
      out <- c(out, knit_child('child.Rmd'))
 }
@@ -81,25 +68,6 @@ for(i in 1:10) {
 cat(paste(out, collapse = '\n'))
 
 
-```
-
-
-
-
-```{r echo = FALSE, results = "asis", include=FALSE}
-
-template <- "## %s
-
-### %s
-
-%s
-
-" # dont't forget the newline
-
-for (i in seq(nrow(joinder2))) {
-  current <- joinder2[i, ]
-  cat(sprintf(template, joinder2$priority_area, joinder2$priorities, joinder2$sentence))
-}
 ```
 
 

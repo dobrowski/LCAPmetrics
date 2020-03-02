@@ -3,9 +3,8 @@ output: html_document
 ---
 
 
-## `r joinder[{i},'priority_area']` 
 
 ### `r joinder[{i},'priorities']` 
 
-`r joinder2[{i},'sentence']` 
+`r joinder[{i},'sentence']` 
 
