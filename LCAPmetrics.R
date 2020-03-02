@@ -49,9 +49,31 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                       "Suspension rates", 
                                       "Expulsion rates", 
                                       "Other local measures (Surveys re safety and school connectedness)"
-                                      )
+                                      ),
+                  "website" = c("https://www.cde.ca.gov/ds/sd/df/filesstaffdemo.asp",
+                                rep("",4),
+                                rep("https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",4),
+                                "https://www.cde.ca.gov/ds/sd/sd/filesreclass.asp",
+                                "https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",
+                                rep("",5),
+                                "https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",
+                                "",
+                                "https://www.cde.ca.gov/ds/sd/sd/filesfycgr.asp",
+                                rep("https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",2),
+                                "https://www.cde.ca.gov/ds/sd/sd/filesed.asp",
+                                rep("",1)
+                                ),
+                  "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant or push-in/pull-out teachers. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status" ,
+                               rep("",6) ,
+                               "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available",
+                               rep("",15)
+                      )
 
 )
+
+
+write_rds(metrics, "metrics.rds")
+
 
 
 dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://drive.google.com/open?id=1XqGRRjQaFMMVshgF0HhnL7Ch9lnxVEYD
@@ -201,5 +223,7 @@ indicators <- list(   susp,exp , math, ela,
     reduce( left_join)
 
 
+
+write_rds(indicators ,here("indicators.rds"))
 
 ### End -----

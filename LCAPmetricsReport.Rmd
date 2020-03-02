@@ -9,8 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 
 library(tidyverse)
+library(glue)
+library(knitr)
 
 dist <- "27661590000000"
+
+indicators <- read_rds("indicators.rds")
+metrics <- read_rds("metrics.rds")
 
 ind_dist <- indicators %>%
     filter(cds == dist) 
@@ -23,12 +28,78 @@ metrics_dist <- ind_dist %>%
     transmute(metrics = row.names(.),
            rate = as.character(V1))
 
-left_join(metrics, metrics_dist)
+joinder <- left_join(metrics, metrics_dist)
 
 
 ```
 
-## R Markdown
+# `r metrics_dist[18,2]`
+
+`r row <- 21`
+
+The `r joinder[row,'description'] %>% simplify()` is `r joinder[row,'rate'] %>% simplify()` based on data from `r joinder[row,'website'] %>% simplify()`.
 
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r purrr, include=FALSE}
+
+joinder2 <- joinder %>%
+    mutate(sentence = if_else(is.na(rate),
+                              glue('The "{description}" is unable.  It can be located in {source}.'),
+                              glue('The "{description}" is {rate} based on data from {website}. {notes}.')
+    )
+    )
+
+i <- 2
+
+```
+
+## `r joinder[1,'priority_area']` 
+
+### `r joinder[1,'priorities']` 
+
+`r joinder2[1,'sentence']` 
+
+```{r children, child='child.Rmd'}
+
+```
+
+
+```{r loop, results = "asis", echo=FALSE,  include=FALSE}
+
+out = NULL
+
+for(i in 1:10) {
+    
+     out <- c(out, knit_child('child.Rmd'))
+}
+
+```
+
+
+```{r output, results = "asis", echo=FALSE}
+cat(paste(out, collapse = '\n'))
+
+
+```
+
+
+
+
+```{r echo = FALSE, results = "asis", include=FALSE}
+
+template <- "## %s
+
+### %s
+
+%s
+
+" # dont't forget the newline
+
+for (i in seq(nrow(joinder2))) {
+  current <- joinder2[i, ]
+  cat(sprintf(template, joinder2$priority_area, joinder2$priorities, joinder2$sentence))
+}
+```
+
+
