@@ -1,11 +1,5 @@
 # Instructions for updating in future years. 
 # Update the "Dashboard_all.rds" file from Dashboard Rproject
-# Update the year here
-yr <- 2019
-
-#
-
-
 
 
 ### Load libraries -----
@@ -14,14 +8,11 @@ library(tidyverse)
 library(here)
 library(vroom)
 
-library(googledrive)
 
 
 options(scipen = 999)
 
-
 `%notin%` <- Negate(`%in%`)
-
 
 round2 = function(x, digits) {
     posneg = sign(x)
@@ -146,7 +137,8 @@ grad <- dashboard_mry %>%
 
 susp <- dashboard_mry %>%
     filter(ind == "susp",
-           studentgroup == "ALL") %>%
+           studentgroup == "ALL",
+           rtype == "D") %>%  # To only get districts and because elementary and high school have suspensions this is the initial key
     select(cds:countyname, susp = currstatus) 
 
 math <- dashboard_mry %>%
