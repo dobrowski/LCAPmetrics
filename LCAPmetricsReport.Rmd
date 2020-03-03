@@ -11,12 +11,23 @@ library(tidyverse)
 library(glue)
 library(here)
 library(knitr)
+library(crayon)
 
 
 dist <- params$dist
 
 indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+
 
 ind_dist <- indicators %>%
     filter(cds == dist) 
@@ -31,9 +42,10 @@ metrics_dist <- ind_dist %>%
 
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
-                              glue('The "{description}" is unavailable in public data sets.  It can be located in {source}.{notes}'),
-                              glue('The "{description}" is {rate} based on data from {website}. {notes}')
-    )
+                              colorize( glue("The {description} is unavailable in public data sets.  It can be located in {source}. {notes}"),"lightgray"),
+                              colorize( glue("The {description} is {rate} based on data from {website}. {notes}"
+                                             ), "black")
+                              )
     )
 
 write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
@@ -42,12 +54,12 @@ write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
 This report was run at `r Sys.time()`
 
+`r joinder[1,'sentence']`
+
+`r joinder[2,'sentence']`
+
 
 # `r metrics_dist[18,2]`
-
-`r row <- 21`
-
-The `r joinder[row,'description'] %>% simplify()` is `r joinder[row,'rate'] %>% simplify()` based on data from `r joinder[row,'website'] %>% simplify()`.
 
 
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
