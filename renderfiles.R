@@ -4,9 +4,16 @@ library(knitr)
 library(rmarkdown)
 
 
+dist <- "27662250000000"
+
 render("LCAPmetricsReport.Rmd", 
-       output_file = "27662250000000",
+       output_file = dist,
        output_dir = here("output"),
        params = list(
-    dist = "27662250000000"
+    dist = dist
 ))
+
+
+
+# 27662250000000 - Spreckels 
+# 27660680000000 - SoMoCo

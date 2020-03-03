@@ -11,7 +11,6 @@ library(tidyverse)
 library(glue)
 library(here)
 library(knitr)
-library(crayon)
 
 
 dist <- params$dist
@@ -53,11 +52,6 @@ write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 ```
 
 This report was run at `r Sys.time()`
-
-`r joinder[1,'sentence']`
-
-`r joinder[2,'sentence']`
-
 
 # `r metrics_dist[18,2]`
 
