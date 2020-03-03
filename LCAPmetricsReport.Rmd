@@ -31,8 +31,6 @@ colorize <- function(x, color) {
 ind_dist <- indicators %>%
     filter(cds == dist) 
 
-
-
 metrics_dist <- ind_dist %>% 
     t() %>%
     as.data.frame() %>%
@@ -51,16 +49,19 @@ write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
 ```
 
-This report was run at `r Sys.time()`
 
-# `r metrics_dist[18,2]`
+# `r metrics_dist[18,2]` LCAP Metrics Report
 
+
+## Report Purpose
+
+The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. 
+
+------
 
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
 
 out = NULL
-
-
 
 for(i in 1:nrow(joinder)) {
     
@@ -72,8 +73,6 @@ for(i in 1:nrow(joinder)) {
 
 ```{r output, results = "asis", echo=FALSE}
 cat(paste(out, collapse = '\n'))
-
-
 ```
 
-
+This report was run at `r Sys.time()`

@@ -6,5 +6,4 @@ output: html_document
 
 ### `r joinder[{i},'priorities']` 
 
-`r joinder[{i},'sentence']` 
-
+|         `r joinder[{i},'sentence']` 

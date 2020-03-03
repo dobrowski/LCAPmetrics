@@ -24,13 +24,7 @@ round2 = function(x, digits) {
 }
 
 
-
-
-
-
-
 ### Import data -------
-
 
 metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
                   "priorities" = c(rep("1. Basic",3),"2. Implement State Standards","7. Course Access", rep("4. Pupil Achievement", 7), "8. Other Pupil Outcomes", rep("3. Parent Involvement",2), rep("5. Pupil Engagement", 5), rep("6. School Climate",3) ),
@@ -83,15 +77,10 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                rep("",3),
                                "Please note this is a rate per thousand students.",
                                ""
-                               
                       )
-
 )
 
-
 write_rds(metrics, "metrics.rds")
-
-
 
 dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://drive.google.com/open?id=1XqGRRjQaFMMVshgF0HhnL7Ch9lnxVEYD
 
@@ -100,7 +89,6 @@ dashboard_mry <- dashboard_all %>%
            year == yr) %>%
     mutate(cds = as.numeric(cds)) %>%
     mutate(cds = as.character(cds))
-
 
 ### Manipulate -----
 
@@ -232,14 +220,12 @@ reclass <- reclass_vroom %>%
            cds = paste0(str_sub(Cds,1,7),"0000000")  ) %>% 
     distinct()
 
-
 ### Combine all the dashboard files ----
 
 indicators <- list(   susp,exp , math, ela, 
                       A_G, AP, chronic, elpi, grad, drop, reclass,
                       cred_rate) %>%
     reduce( left_join)
-
 
 
 write_rds(indicators ,here("indicators.rds"))
