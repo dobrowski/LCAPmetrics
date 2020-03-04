@@ -7,6 +7,7 @@
 library(tidyverse)
 library(here)
 library(vroom)
+library(readxl)
 
 
 
@@ -72,7 +73,9 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available",
                                rep("",2),
                                "Please note this is the percentage of the cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",
-                               rep("",6),
+                               rep("",2),
+                               "One possible example is a rating on a self-assessment tool.",
+                               rep("",3),
                                "Please note LEAs can find middle school dropouts information from CALPADS snapshot report 1.14: Dropouts Count – State View (filtered for grades seven and eight)",
                                rep("",3),
                                "Please note this is a rate per thousand students.",
@@ -89,6 +92,19 @@ dashboard_mry <- dashboard_all %>%
            year == yr) %>%
     mutate(cds = as.numeric(cds)) %>%
     mutate(cds = as.character(cds))
+
+write_rds(dashboard_mry, "dashboard_mry.rds")
+
+
+csi_all <- read_excel(here("data","essaassistancestudentgroup19.xlsx"), range = "A3:G9975")
+
+csi_mry <- csi_all %>%
+    filter( str_extract(cds, "[1-9]{1,2}") == 27,
+            str_detect(AssistanceStatus2019, "CSI")) %>%
+    mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  ))
+
+write_rds(csi_mry, "csi_mry.rds")
+
 
 ### Manipulate -----
 

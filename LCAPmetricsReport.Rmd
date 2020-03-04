@@ -17,6 +17,8 @@ dist <- params$dist
 
 indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
+dashboard_mry <- read_rds("dashboard_mry.rds")
+csi_mry <- read_rds("csi_mry.rds")
 
 colorize <- function(x, color) {
   if (knitr::is_latex_output()) {
@@ -57,6 +59,8 @@ write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. 
 
+CDE's Tuesday@2 webinar on dashboard local indicators can be viewed at https://www.youtube.com/watch?v=yExOG303vzM&feature=emb_logo. Please remember that these items need to be presented at a regularly scheduled board meeting as a *non-consent* item in conjunction with the adoption of the LCAP.  
+
 ------
 
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
@@ -74,5 +78,99 @@ for(i in 1:nrow(joinder)) {
 ```{r output, results = "asis", echo=FALSE}
 cat(paste(out, collapse = '\n'))
 ```
+
+
+-----------
+
+## LCAP Identified Need Section
+
+These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included. 
+
+```{r needs, echo=FALSE, include=FALSE}
+
+ind_long_names <- tibble(ind = c("cci","elpi","ela", "math", "grad", "chronic", "susp"),
+                         long = c("College and Career", "English Language Progress Indicator", "English Language Arts scores", "Math CAASPP scores", "Graduation Rate", "Chronic Absenteeism", "Suspensions"))
+
+studentgroups <- tibble(name = c("ALL", "AA", "AI", "AS", "FI", "HI", "PI", "WH", "MR", "EL", "ELO", "EO", "SED", "SWD", "FOS", "HOM"),
+                        descriptive = c(
+                            "All Students",
+                            "Black/African American",
+                            "American Indian or Alaska Native",
+                            "Asian",
+                            "Filipino",
+                            "Hispanic",
+                            "Pacific Islander",
+                            "White",
+                            "Multiple Races/Two or More",
+                            "English Learner",
+                            "English Learner Only", 
+                            "English Only",
+                            "Socioeconomically Disadvantaged",
+                            "Students with Disabilities",
+                            "Foster",
+                            "Homeless")
+)
+
+
+
+lea.need <- dashboard_mry %>% 
+    filter(cds == dist,
+           studentgroup == "ALL",
+           color %in% c(1,2)) %>%
+    select(ind) %>%
+    left_join(ind_long_names)
+
+
+lea.sub.low <- dashboard_mry %>%
+    filter(cds == dist) %>%
+    select(cds,ind, studentgroup, color) %>%
+    group_by(cds, ind) %>%
+    pivot_wider(names_from = studentgroup, values_from = color) %>%
+    pivot_longer(cols = -c(ALL, cds, ind) ) %>%
+    mutate(diff = ALL - value) %>%
+    filter(!is.na(value) & value != 0) %>%
+    filter(diff >= 2) %>%
+    left_join(ind_long_names) %>%
+    left_join(studentgroups) %>%
+    mutate(phrases = glue("{descriptive} youth for {long}"))
+
+
+redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
+                       "No indicators"
+
+student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
+                       "No student groups"
+
+```
+
+### Indicators which are Red or Orange overall 
+
+`r redorange` were Red or Orange on the dashboard for ALL students overall. 
+
+
+### Student groups whose performance level was two or more levels below students overall
+
+`r student.need` were two or more performance levels below ALL students in the district. 
+
+
+-----------
+
+## CSI-identified Schools 
+
+
+```{r csi, echo=FALSE, include=FALSE}
+
+
+csi <- csi_mry %>% 
+    filter(cds == dist) 
+
+csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$schoolname), " have been identified as CSI schools.") else "There are no schools in the district identified for CSI and the section can be skipped by entering 'N/A'."
+
+```
+
+`r csi.words`
+
+
+----------
 
 This report was run at `r Sys.time()`
