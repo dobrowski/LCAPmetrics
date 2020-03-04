@@ -72,7 +72,7 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                rep("",6) ,
                                "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available",
                                rep("",2),
-                               "Please note this is the percentage of the cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",
+                               "Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",
                                rep("",2),
                                "One possible example is a rating on a self-assessment tool.",
                                rep("",3),

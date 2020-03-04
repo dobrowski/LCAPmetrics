@@ -1,5 +1,7 @@
 ---
-output: html_document
+output: 
+    html_document:
+        theme: readable
 params:
     dist: "27661590000000"
 ---
@@ -11,7 +13,6 @@ library(tidyverse)
 library(glue)
 library(here)
 library(knitr)
-
 
 dist <- params$dist
 
@@ -52,7 +53,10 @@ write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 ```
 
 
-# `r metrics_dist[18,2]` LCAP Metrics Report
+
+---
+title: `r metrics_dist[18,2]` LCAP Metrics Report
+---
 
 
 ## Report Purpose
