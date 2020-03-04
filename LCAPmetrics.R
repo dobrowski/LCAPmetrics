@@ -9,7 +9,7 @@ library(here)
 library(vroom)
 library(readxl)
 
-
+yr <- 2019
 
 options(scipen = 999)
 
@@ -171,7 +171,7 @@ ela <- dashboard_mry %>%
 drop_vroom <- vroom("data/cohort5year1819.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
 
 
-drop <- grad_vroom  %>% 
+drop <- drop_vroom  %>% 
     mutate_at(vars(CohortStudents:DropoutRate), funs(as.numeric) ) %>%
     filter( ReportingCategory == "TA",
             CharterSchool =="No",
