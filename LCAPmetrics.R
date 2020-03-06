@@ -130,7 +130,7 @@ AP <- dashboard_mry %>%
 # Note this is percentage of cohort that passed TWO AP exams. PErcentage that passed a single one is not available on Dashboard
 
 chronic <- dashboard_mry %>%
-    filter(ind == "cci",
+    filter(ind == "chronic",
            studentgroup == "ALL") %>%
     select(cds:countyname, chronic = currstatus) 
 
