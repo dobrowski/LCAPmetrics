@@ -22,6 +22,8 @@ render("LCAPmetricsReport.Rmd",
 
 ### Everybody ------
 
+indicators <- read_rds(here("indicators.rds"))
+
 walk2(indicators$cds, indicators$DistrictName , ~ rmarkdown::render("LCAPmetricsReport.Rmd", 
                                     output_file = {.y},
                                     output_dir = here("output"),

@@ -46,7 +46,7 @@ metrics_dist <- ind_dist %>%
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
                               colorize( glue("The {description} is unavailable in public data sets.  It can be located in {source}. {notes}"),"lightgray"),
-                              colorize( glue("The {description} is {rate} based on data from {website}. {notes}"
+                              colorize( glue("The {description} is ***{rate}*** based on data from {website}. {notes}"
                                              ), "black")
                               )
     )
@@ -64,9 +64,9 @@ title: `r metrics_dist[18,2]` LCAP Metrics Report
 
 ## Report Purpose
 
-The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. 
+The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items in grey do not have publicly available data for your LEA, whereas items in black do have data to present. 
 
-CDE's Tuesday@2 webinar on dashboard local indicators can be viewed at https://www.youtube.com/watch?v=yExOG303vzM&feature=emb_logo. Please remember that these items need to be presented at a regularly scheduled board meeting as a *non-consent* item in conjunction with the adoption of the LCAP.  
+Please remember that starting this year, local dashboard indicators for the 2020 Dashboard need to be presented at a regularly scheduled board meeting as a *non-consent* item in conjunction with the adoption of the LCAP.  
 
 ------
 
