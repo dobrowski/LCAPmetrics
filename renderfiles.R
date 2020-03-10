@@ -11,7 +11,7 @@ library(rmarkdown)
 # 27660680000000 - SoMoCo
 
 
-dist <- "27662250000000"
+dist <- "27659610000000"
 
 render("LCAPmetricsReport.Rmd", 
        output_file = dist,
