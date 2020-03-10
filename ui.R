@@ -1,11 +1,4 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
 
 library(shiny)
 
@@ -22,7 +15,13 @@ shinyUI(fluidPage(
                         choices = list("Salinas Union" = 27661590000000, "Alisal" = 27659610000000, "Bradley" = 27659790000000), 
                         selected = 1),
      #       sliderInput("slider", "Slider", 27661590000000, 27661590000000, 1),
-            downloadButton("report", "Generate LCAP Report")
+            actionButton("generate", "Generate Report", icon = icon("file"), # This is the only button that shows up when the app is loaded
+                  style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+     br(),
+     br(),
+     conditionalPanel(condition = "output.reportbuilt",
+                      downloadButton("download", "Download LCAP Report", 
+                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
         ),
 
         # Show a plot of the generated distribution
