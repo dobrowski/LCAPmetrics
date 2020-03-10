@@ -22,3 +22,5 @@ including the California Dashboard and CDE’s downloadable data files
 ## Reports
 
 All reports will be put in the output folder
+
+\[logo.png\]
