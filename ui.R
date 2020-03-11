@@ -1,6 +1,18 @@
 
 
 library(shiny)
+library(rmarkdown)
+
+
+library(shiny)
+library(here)
+library(jsonlite)
+library(rmarkdown)
+library(knitr)
+library(tidyverse)
+library(glue)
+
+
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
@@ -12,7 +24,7 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectInput("select", label = h3("Select box"), 
-                        choices = list("Salinas Union" = 27661590000000, "Alisal" = 27659610000000, "Bradley" = 27659790000000), 
+                        choices = list("Salinas Union" = "27661590000000", "Alisal" = "27659610000000", "Bradley" = "27659790000000"), 
                         selected = 1),
      #       sliderInput("slider", "Slider", 27661590000000, 27661590000000, 1),
             actionButton("generate", "Generate Report", icon = icon("file"), # This is the only button that shows up when the app is loaded

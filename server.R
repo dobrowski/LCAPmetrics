@@ -3,6 +3,13 @@
 
 library(shiny)
 library(here)
+library(jsonlite)
+library(rmarkdown)
+library(knitr)
+library(tidyverse)
+library(glue)
+
+
 
 
 # Define server logic required to pull and process data
@@ -12,23 +19,24 @@ shinyServer(function(input, output) {
     
     observeEvent(input$generate, {
         
-        # progress <- shiny::Progress$new()
-        # # Make sure it closes when we exit this reactive, even if there's an error
-        # on.exit(progress$close())
-        # progress$set(message = "Gathering data and building report.", 
-        #              detail = "This may take a while. This window will disappear  
-        #              when the report is ready.", value = 1)
-        
-       
-        params <- list(dist = input$select)
+        #  progress <- shiny::Progress$new()
+        # # # Make sure it closes when we exit this reactive, even if there's an error
+        #  on.exit(progress$close())
+        #  progress$set(message = "Gathering data and building report.", 
+        #               detail = "This may take a while. This window will disappear  
+        #               when the report is ready.", value = 1)
+        # 
+   #     param <- list(dist = 27661590000000)
+        param <- list(dist = input$select)
  
         tmp_file <- paste0(tempfile(), ".html") #Creating the temp where the .pdf is going to be stored
         
         render("LCAPmetricsReport.Rmd", 
                output_format = "all", 
                output_file = tmp_file,
-               params = params, 
-               envir = new.env(parent = globalenv()) )
+               params = param, 
+               envir = new.env(parent = globalenv()) 
+               )
         
         report$filepath <- tmp_file #Assigning in the temp file where the .pdf is located to the reactive file created above
         

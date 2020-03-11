@@ -12,10 +12,11 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
+library(here)
+library(rmarkdown)
+library(knitr)
 library(tidyverse)
 library(glue)
-library(here)
-library(knitr)
 
 dist <- params$dist
 
@@ -41,7 +42,8 @@ metrics_dist <- ind_dist %>%
     t() %>%
     as.data.frame() %>%
     transmute(metrics = row.names(.),
-           rate = as.character(V1))
+           rate = as.character(.$V1)
+           )
 
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
@@ -51,7 +53,7 @@ joinder <- left_join(metrics, metrics_dist) %>%
                               )
     )
 
-write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
+# write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
 ```
 
