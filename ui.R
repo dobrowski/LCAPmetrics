@@ -13,6 +13,10 @@ library(tidyverse)
 library(glue)
 
 
+indicators <- read_rds("indicators.rds")
+series_ids <- indicators$cds
+names(series_ids) <- indicators$DistrictName
+
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
@@ -23,8 +27,9 @@ shinyUI(fluidPage(
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
-            selectInput("select", label = h3("Select box"), 
-                        choices = list("Salinas Union" = "27661590000000", "Alisal" = "27659610000000", "Bradley" = "27659790000000"), 
+            selectInput("select", label = h3("Select box"),
+                        choices = series_ids,
+                #        choices = list( "Alisal" = "27659610000000","Big Sur" = "27751500000000" ,"Bradley" = "27659790000000", "Chualar" = "27659950000000", "North Monterey County" = "27738250000000", "Salinas Union" = "27661590000000", "South Monterey" = "27660680000000", "Washington" = "27662330000000"), 
                         selected = 1),
      #       sliderInput("slider", "Slider", 27661590000000, 27661590000000, 1),
             actionButton("generate", "Generate Report", icon = icon("file"), # This is the only button that shows up when the app is loaded
