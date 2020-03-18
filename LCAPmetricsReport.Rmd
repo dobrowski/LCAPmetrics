@@ -24,6 +24,7 @@ indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 csi_mry <- read_rds("csi_mry.rds")
+undup.count <- read_rds("undup.rds")
 
 colorize <- function(x, color) {
   if (knitr::is_latex_output()) {
@@ -71,6 +72,8 @@ The purpose of this project is to provide all districts with as many of the requ
 Please remember that starting this year, local dashboard indicators for the 2020 Dashboard need to be presented at a regularly scheduled board meeting as a *non-consent* item in conjunction with the adoption of the LCAP.  
 
 ------
+
+## Required Metrics
 
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
 
@@ -178,6 +181,26 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 ```
 
 `r csi.words`
+
+
+
+-----------
+
+## Unduplicated Percentage
+
+
+```{r undup, echo=FALSE, include=FALSE}
+
+
+undup <- undup.count %>% 
+    filter(cds == dist) 
+
+undup.words <- glue( "The percentage of unduplicated students for 2018-19 was { scales::percent( undup$undup.perc , accuracy = .1 ) }." )
+
+```
+
+`r undup.words`
+
 
 
 ----------

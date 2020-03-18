@@ -246,4 +246,20 @@ indicators <- list(   susp,exp , math, ela,
 
 write_rds(indicators ,here("indicators.rds"))
 
+
+### Unduplciated Count -------
+
+
+cupc1819 <- read_excel(here("data","cupc1819-k12.xlsx"), sheet = "LEA-Level CALPADS UPC Data", range = "A3:AA2302") %>%
+    clean_names()
+
+undup.count <- cupc1819 %>% 
+    filter(county_code == "27",
+           school_code == "0000000") %>%
+    transmute(undup.perc = calpads_unduplicated_pupil_count_upc/total_enrollment,
+           cds = glue('{county_code}{district_code}{school_code}') )
+
+
+write_rds(undup.count ,here("undup.rds"))
+
 ### End -----
