@@ -211,28 +211,33 @@ A_G <- tbl(con, "DASH_CCI") %>%
 
 ## High School Drop out 
 
-drop_vroom <- vroom("data/cohort5year1819.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
 
-
-drop <- drop_vroom  %>% 
-    mutate_at(vars(CohortStudents:DropoutRate), funs(as.numeric) ) %>%
+drop <- tbl(con, "GRAD_FOUR")  %>% 
+#    mutate_at(vars(CohortStudents:DropoutRate), funs(as.numeric) ) %>%
     filter( ReportingCategory == "TA",
             CharterSchool =="No",
-            Dass == "All") %>%
+            Dass == "All",
+            CountyName == "Monterey",
+            AcademicYear == max(AcademicYear)) %>%
+    collect() %>%
     mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
-    select(cds, DropoutRate)
+     select(cds, Dropout_Rate) 
+
 
 
 ## Expelled 
 
-exp_vroom <- vroom("data/exp1718.txt",.name_repair = ~ janitor::make_clean_names(., case = "upper_camel")) 
 
-exp <- exp_vroom %>%
-    mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
-    mutate(exp = (UnduplicatedCountOfStudentsExpelledTotal*1000/CumulativeEnrollment)%>% round2(3) )  %>%
-    filter(ReportingCategory == "TA",
-           AggregateLevel == "D2") %>%  # Charter included Yes/No
-    mutate(cds = paste0(CountyCode,DistrictCode,SchoolCode)) %>%
+exp <- tbl(con, "EXP")  %>%
+#    mutate_at(vars(CumulativeEnrollment:ExpulsionCountDefianceOnly), funs(as.numeric) ) %>%
+    filter(county_name == "Monterey",
+           reporting_category == "TA",
+           academic_year == max(academic_year),
+           charter_yn == "All"
+           ) %>%  # Charter included Yes/No
+    collect() %>%
+    mutate(exp = (unduplicated_count_of_students_expelled_total*1000/cumulative_enrollment)%>% round2(3) )  %>%
+    mutate(cds = paste0(county_code,district_code,school_code))  %>%
     select(cds, exp)
 
 ## Credential Teachers
@@ -242,18 +247,22 @@ exp <- exp_vroom %>%
 # % of teachers who are BOTH fully credentialed and appropriately assigned. (if they are PIP, STIP, etc. they wouldn’t be in this count)
 
 
-staff <- vroom("data/StaffSchoolFTE18.txt")
+cred <-  tbl(con, "STAFF_CRED") %>%
+    filter(AcademicYear == max(AcademicYear)) %>%
+    select(RecID, CredentialType) %>%
+    distinct()
 
-cred <- vroom("data/StaffCred18.txt")
+staff.mry <- tbl(con, "STAFF_SCHOOL_FTE") %>%
+    filter(CountyName =="Monterey",
+           JobClassification == "12",
+           AcademicYear == max(AcademicYear)) %>%  # Only teachers and not 10 = Administrator c("11 = Pupil services", "12 = Teacher", "25 = Non-certificated Administrator", "26 = Charter School Non-certificated Teacher", "27 = Itinerant or Pull-Out/Push-In Teacher")
+    select(-FileCreated, -YEAR, -AcademicYear) %>%
+    left_join(cred)  %>%
+ #   mutate(full_cred = if_else(CredentialType == "10", TRUE, FALSE)) %>% 
+    collect() %>%
+    mutate(full_cred = if_else(CredentialType == "10", TRUE, FALSE)) 
 
 
-
-staff.mry <- staff %>%
-    filter(str_detect(CountyName,"Monterey"),
-           JobClassification == "12") %>%  # Only teachers and not 10 = Administrator c("11 = Pupil services", "12 = Teacher", "25 = Non-certificated Administrator", "26 = Charter School Non-certificated Teacher", "27 = Itinerant or Pull-Out/Push-In Teacher")
-    select(-FileCreated) %>%
-    left_join(cred) %>%
-    mutate(full_cred = if_else(CredentialType == "10", TRUE, FALSE))
 
 
 cred_rate <- staff.mry %>%
@@ -269,15 +278,18 @@ cred_rate <- staff.mry %>%
 reclass_vroom <- vroom("data/filesreclass19.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel"))
 
 
-reclass <- reclass_vroom %>%
-    group_by(District) %>%
+reclass <- tbl(con, "RECLASS") %>%
+    filter(County =="Monterey",
+           YEAR == max(YEAR)) %>%
+    collect()    %>%
+group_by(District) %>%
     mutate(reclassified = sum(Reclass),
-           ELenroll = sum(El)) %>%
+           ELenroll = sum(EL)) %>%
     ungroup() %>%
     transmute(
         reclass_rate = (reclassified*100/ELenroll) %>% round2(1), 
-        cds = paste0(str_sub(Cds,1,7),"0000000")  ) %>% 
-    distinct()
+        cds = paste0(str_sub(CDS,1,7),"0000000")  ) %>% 
+    distinct() 
 
 ### Combine all the dashboard files ----
 
@@ -293,15 +305,16 @@ write_rds(indicators ,here("indicators.rds"))
 
 ### Unduplciated Count -------
 
-
-cupc1819 <- read_excel(here("data","cupc1819-k12.xlsx"), sheet = "LEA-Level CALPADS UPC Data", range = "A3:AA2302") %>%
-    clean_names()
-
-undup.count <- cupc1819 %>% 
-    filter(county_code == "27",
-           school_code == "0000000") %>%
-    transmute(undup.perc = calpads_unduplicated_pupil_count_upc/total_enrollment,
-              cds = glue('{county_code}{district_code}{school_code}') )
+undup.count <- tbl(con, "UPC") %>%
+    filter(academic_year == max(academic_year),
+           county_code == "27",
+           #school_code == "0000000"
+           ) %>%
+    collect()  %>%
+    group_by(county_code,district_code) %>%
+    transmute(undup.perc = sum(calpads_unduplicated_pupil_count_upc)/sum(total_enrollment),
+              cds = glue('{county_code}{district_code}0000000') ) %>%
+    distinct()
 
 
 write_rds(undup.count ,here("undup.rds"))
