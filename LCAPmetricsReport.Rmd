@@ -69,7 +69,7 @@ title: `r metrics_dist[18,2]` LCAP Metrics Report
 
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items in grey do not have publicly available data for your LEA, whereas items in black do have data to present. 
 
-Please remember that starting this year, local dashboard indicators for the 2020 Dashboard need to be presented at a regularly scheduled board meeting as a *non-consent* item in conjunction with the adoption of the LCAP.  
+Please note that the most recently available data is used, but it many cases because of COVID-19 and the de facto suspension of the state dashboard, the data represented comes from the 2019 dashboard representing the 2018-19 school year.  
 
 ------
 
@@ -96,7 +96,9 @@ cat(paste(out, collapse = '\n'))
 
 ## LCAP Identified Need Section
 
-These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included. 
+Because of COVID-19 and no dashboard data for this year, this section is not needed. 
+
+~~These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included.~~ 
 
 ```{r needs, echo=FALSE, include=FALSE}
 
@@ -146,23 +148,24 @@ lea.sub.low <- dashboard_mry %>%
     left_join(studentgroups) %>%
     mutate(phrases = glue("{descriptive} youth for {long}"))
 
+# Blocked out for this year since not relevant
 
-redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
-                       "No indicators"
-
-student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
-                       "No student groups"
+# redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
+#                        "No indicators"
+# 
+# student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
+#                        "No student groups"
 
 ```
 
-### Indicators which are Red or Orange overall 
+### ~~Indicators which are Red or Orange overall~~ 
 
-`r redorange` were Red or Orange on the dashboard for ALL students overall. 
+~~`r redorange` were Red or Orange on the dashboard for ALL students overall.~~
 
 
-### Student groups whose performance level was two or more levels below students overall
+### ~~Student groups whose performance level was two or more levels below students overall~~
 
-`r student.need` were two or more performance levels below ALL students in the district. 
+~~`r student.need` were two or more performance levels below ALL students in the district.~~
 
 
 -----------
@@ -195,7 +198,7 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 undup <- undup.count %>% 
     filter(cds == dist) 
 
-undup.words <- glue( "The percentage of unduplicated students for 2018-19 was { scales::percent( undup$undup.perc , accuracy = .1 ) }." )
+undup.words <- glue( "The most recent percentage of unduplicated students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was { scales::percent( undup$undup.perc , accuracy = .1 ) }." )
 
 ```
 

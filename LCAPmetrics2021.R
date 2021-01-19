@@ -23,7 +23,23 @@ con <- mcoe_sql_con()
 metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
                   "priorities" = c(rep("1. Basic",3),"2. Implement State Standards","7. Course Access", rep("4. Pupil Achievement", 7), "8. Other Pupil Outcomes", rep("3. Parent Involvement",2), rep("5. Pupil Engagement", 5), rep("6. School Climate",3) ),
                   "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse","math", "ela" ,"ag_cte_perc","elpi","reclass_rate","ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","chronic","MSdropout","DropoutRate","grad","susp","exp","local_other"),
-                  "source" = c(rep("Local Dashboard Data",5),rep("Dashboard",4),"Dataquest", "Dashboard", "Dataquest", "Local data",rep("Local Dashboard Data",2), "Local data", "Dashboard", rep("Dataquest",2), rep("Dashboard",2), "Dataquest", "Local Dashboard Data"   ),
+                  "source" = c(rep("Local Dashboard Data",1),
+                               rep("Local Dashboard Data and  district Williams Report",2),
+                               "LEA and site CCSS implementation plans and teacher participation in CCSS training.",
+                               "student information systems",
+                               rep("Dashboard",4),
+                               "Dataquest",# https://www.cde.ca.gov/ci/gs/hs/eapindex.asp  doesn't exist, maybe in CCI?
+                               "Dashboard",
+                               "Dataquest",
+                               "Local data",
+                               rep("Local Dashboard Data and district and school surveys related to WASC and Single Plan Student Achievement, or DLAC/ELAC",1),
+                               "Local Dashboard Data and local data on parent involvement in district/school activities (e.g., committees, student clubs, after school enrichment, fundraisers, carnivals, promotion activities, PTO membership)",
+                               "student information systems",
+                               "Dashboard",
+                               rep("student information systems",2),
+                               rep("Dashboard",2), 
+                               "Dataquest", 
+                               "Local Dashboard Data and from such sources as LEA plans, School Site Council activities, and English Learner Advisory Council materials"   ),
                   "description" = c("Teachers: Fully Credentialed & Appropriately Assigned", 
                                     "Standards-aligned Instructional Materials for every student",
                                     "School Facilities in “Good Repair” per CDE’s Facility Inspection Tool (FIT)",
@@ -61,12 +77,12 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                 "https://www.cde.ca.gov/ds/sd/sd/filesed.asp",
                                 rep("",1)
                   ),
-                  "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant or push-in/pull-out teachers. The most recent available public data is 2017-18. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status" ,
-                               rep("",6) ,
-                               "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available",
-                               rep("",2),
-                               "Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",
-                               rep("",2),
+                  "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
+                               rep("",6),
+                               "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available", # just use the CCI indicator too. 
+                               rep("",2),  #  Look at Title III AMOA 2  reporting
+                               "Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
+                               rep("",2),  #  Remove EAP reference to dataquest.  https://www.cde.ca.gov/ci/gs/hs/eapindex.asp
                                "One possible example is a rating on a self-assessment tool.",
                                rep("",3),
                                "Please note LEAs can find middle school dropouts information from CALPADS snapshot report 1.14: Dropouts Count – State View (filtered for grades seven and eight)",
@@ -74,7 +90,8 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                "Please note this is a rate per thousand students.",
                                ""
                   )
-)
+) %>% 
+    arrange(priorities)
 
 write_rds(metrics, "metrics.rds")
 
@@ -275,9 +292,6 @@ cred_rate <- staff.mry %>%
 
 ## Reclass ----
 
-reclass_vroom <- vroom("data/filesreclass19.txt", .name_repair = ~ janitor::make_clean_names(., case = "upper_camel"))
-
-
 reclass <- tbl(con, "RECLASS") %>%
     filter(County =="Monterey",
            YEAR == max(YEAR)) %>%
@@ -303,7 +317,7 @@ indicators <- list(   susp,exp , math, ela,
 write_rds(indicators ,here("indicators.rds"))
 
 
-### Unduplciated Count -------
+### Unduplicated Count -------
 
 undup.count <- tbl(con, "UPC") %>%
     filter(academic_year == max(academic_year),
