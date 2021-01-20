@@ -61,7 +61,7 @@ joinder <- left_join(metrics, metrics_dist) %>%
 
 
 ---
-title: `r metrics_dist[18,2]` LCAP Metrics Report
+title: `r metrics_dist[20,2]` LCAP Metrics Report
 ---
 
 
@@ -150,11 +150,11 @@ lea.sub.low <- dashboard_mry %>%
 
 # Blocked out for this year since not relevant
 
-# redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
-#                        "No indicators"
-# 
-# student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
-#                        "No student groups"
+redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
+                       "No indicators"
+
+student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
+                       "No student groups"
 
 ```
 

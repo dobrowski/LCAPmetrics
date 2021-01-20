@@ -8,7 +8,7 @@ library(tidyverse)
 library(here)
 library(vroom)
 library(readxl)
-library(MCOE)
+# library(MCOE)
 
 yr <- 2020
 
@@ -21,7 +21,7 @@ con <- mcoe_sql_con()
 ### Import data -------
 
 metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
-                  "priorities" = c(rep("1. Basic",3),"2. Implement State Standards","7. Course Access", rep("4. Pupil Achievement", 7), "8. Other Pupil Outcomes", rep("3. Parent Involvement",2), rep("5. Pupil Engagement", 5), rep("6. School Climate",3) ),
+                  "priorities" = c(rep("1. Basic",3),"2. Implement State Standards","7. Course Access", rep("4. Pupil Achievement*", 7), "8. Other Pupil Outcomes", rep("3. Parent Involvement",2), rep("5. Pupil Engagement*", 5), rep("6. School Climate*",3) ),
                   "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse","math", "ela" ,"ag_cte_perc","elpi","reclass_rate","ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","chronic","MSdropout","DropoutRate","grad","susp","exp","local_other"),
                   "source" = c(rep("Local Dashboard Data",1),
                                rep("Local Dashboard Data and  district Williams Report",2),

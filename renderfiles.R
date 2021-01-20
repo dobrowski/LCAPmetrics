@@ -12,7 +12,8 @@ library(here)
 # 27660680000000 - SoMoCo
 
 
-dist <- "27659610000000"
+
+dist <- "27660680000000"
 
 render("LCAPmetricsReport.Rmd", 
        output_file = dist,
