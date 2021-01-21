@@ -28,7 +28,7 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectInput("select", label = h3("Select box"),
-                        choices = series_ids,
+                        choices = series_ids[order(names(series_ids))],
                 #        choices = list( "Alisal" = "27659610000000","Big Sur" = "27751500000000" ,"Bradley" = "27659790000000", "Chualar" = "27659950000000", "North Monterey County" = "27738250000000", "Salinas Union" = "27661590000000", "South Monterey" = "27660680000000", "Washington" = "27662330000000"), 
                         selected = 1),
      #       sliderInput("slider", "Slider", 27661590000000, 27661590000000, 1),

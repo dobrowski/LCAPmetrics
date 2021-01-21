@@ -314,6 +314,20 @@ indicators <- list(   susp,exp , math, ela,
     reduce( left_join)
 
 
+indicators <- indicators %>%
+    mutate(susp = scales::percent( susp/100 , accuracy = .1 ),
+           cred.rate.wt = scales::percent( cred.rate.wt/100 , accuracy = .1 ),
+           elpi = scales::percent( elpi/100 , accuracy = .1 ),
+           reclass_rate = scales::percent( reclass_rate/100 , accuracy = .1 ),
+           ap = scales::percent( ap/100 , accuracy = .1 ),
+           chronic = scales::percent( chronic/100 , accuracy = .1 ),
+           grad = scales::percent( grad/100 , accuracy = .1 ),
+           Dropout_Rate = scales::percent( Dropout_Rate/100 , accuracy = .1 ),
+           ag_cte_perc = scales::percent( ag_cte_perc/100 , accuracy = .1 )
+           
+           )
+
+
 write_rds(indicators ,here("indicators.rds"))
 
 
