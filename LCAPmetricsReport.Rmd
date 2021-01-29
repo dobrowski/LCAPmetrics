@@ -69,7 +69,7 @@ title: `r metrics_dist[20,2]` LCAP Metrics Report
 
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items in grey do not have publicly available data for your LEA, whereas items in black do have data to present. 
 
-Please note that the most recently available data is used, but it many cases because of COVID-19 and the de facto suspension of the state dashboard, the data represented comes from the 2019 dashboard representing the 2018-19 school year.  
+Please note that the most recently available data is used, but it many cases because of COVID-19 and the de facto suspension of the state dashboard, the data represented comes from the 2019 dashboard representing the 2018-19 school year. MCOE and CDE encourage you to use current local data from this school year when available.  
 
 ------
 

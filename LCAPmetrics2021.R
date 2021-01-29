@@ -78,7 +78,8 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                 rep("",1)
                   ),
                   "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
-                               rep("",6),
+                               rep("",4),
+                               rep("It is recommended to use local data, such as interims or NWEA, rather than data from two years ago.",2),
                                "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available", # just use the CCI indicator too. 
                                rep("",2),  #  Look at Title III AMOA 2  reporting
                                "Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
