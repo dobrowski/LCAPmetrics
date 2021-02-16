@@ -8,7 +8,8 @@ library(tidyverse)
 library(here)
 library(vroom)
 library(readxl)
-# library(MCOE)
+library(glue)
+# library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
 
 yr <- 2020
 
@@ -22,7 +23,11 @@ con <- mcoe_sql_con()
 
 metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupil Outcomes",8), rep("Engagement",10) ) ,
                   "priorities" = c(rep("1. Basic",3),"2. Implement State Standards","7. Course Access", rep("4. Pupil Achievement*", 7), "8. Other Pupil Outcomes", rep("3. Parent Involvement",2), rep("5. Pupil Engagement*", 5), rep("6. School Climate*",3) ),
-                  "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse","math", "ela" ,"ag_cte_perc","elpi","reclass_rate","ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart","Attendance","chronic","MSdropout","DropoutRate","grad","susp","exp","local_other"),
+                  "metrics" = c("cred.rate.wt","Materials","GoodRepair","Standards","BroadCourse", #5
+                                "math", "ela" ,"ag_cte_perc","elpi","reclass_rate", #10
+                                "ap","EAP","outcomes_other", "ParentInput","UnduplicatedParentPart", #15
+                                "Attendance","chronic","MSdropout","DropoutRate","grad", #20
+                                "susp","exp","local_other"),
                   "source" = c(rep("Local Dashboard Data",1),
                                rep("Local Dashboard Data and  district Williams Report",2),
                                "LEA and site CCSS implementation plans and teacher participation in CCSS training.",
@@ -78,16 +83,20 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",5),rep("Pupi
                                 rep("",1)
                   ),
                   "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
-                               rep("",4),
+                               rep("",4), #5
                                rep("It is recommended to use local data, such as interims or NWEA, rather than data from two years ago.",2),
-                               "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available", # just use the CCI indicator too. 
-                               rep("",2),  #  Look at Title III AMOA 2  reporting
+                               "Please note this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. It is not possible to get the exact figure with the aggregate data available.  CALPADS Report 3.14, 3.15 and 15.1 may be helpful.", # just use the CCI indicator too. 
+                               rep("",2), #10  #  Look at Title III AMOA 2  reporting
                                "Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
                                rep("",2),  #  Remove EAP reference to dataquest.  https://www.cde.ca.gov/ci/gs/hs/eapindex.asp
                                "One possible example is a rating on a self-assessment tool.",
-                               rep("",3),
+                               "Consider daily participation or weekly engagement records.", #15
+                               "",
+                               "CALPADS Report 14.1 and 14.2 may be helpful.", #17
                                "Please note LEAs can find middle school dropouts information from CALPADS snapshot report 1.14: Dropouts Count – State View (filtered for grades seven and eight)",
-                               rep("",3),
+                               "",
+                               "CALPADS Report 15.1 and 15.2 may be helpful.", #20
+                               "CALPADS Report 7.10 and 7.12 may be helpful.",
                                "Please note this is a rate per thousand students.",
                                ""
                   )
