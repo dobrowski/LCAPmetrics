@@ -61,7 +61,7 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                                     
                                     "State CAASPP assessments (Math DFS)", 
                                     "State CAASPP assessments (ELA DFS)", 
-                                    "Percent of pupils that have successfully completed A-G courses and CTE courses", 
+                                    "Percent of pupils that have successfully completed both A-G courses and CTE courses", 
                                     "Percent of pupils that have successfully completed A-G courses", 
                                     "Percent of pupils that have successfully completed CTE courses", 
                                     "Percent of ELs who progress in English proficiency (ELPAC)",
@@ -102,7 +102,7 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                   "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
                                rep("",7), #5
                                rep("Since this is from 2018-19, it is recommended to use local data, such as interims or NWEA, rather than data from two years ago.",2),
-                               "It is not possible to calculate students that completed both A-G courses and also completed a CTE course with public data. Your SIS or CALPADS Report 3.14, 3.15 and 15.1 may be helpful.", # just use the CCI indicator too. 
+                               "It is not possible to calculate students that completed both A-G courses and also completed a CTE course with public data. Your SIS or CALPADS Report 3.15 and 15.2 may be helpful.", # just use the CCI indicator too. 
                                rep("Note 2019-20 data is available on the Dashboard. This is calculated using the number of students prepared and approaching prepared. ",2), # just use the CCI indicator too. 
                                rep("",2), #10  #  Look at Title III AMOA 2  reporting
                                "Note 2019-20 data is available on the Dashboard. Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard. Please also look at College Board Online https://scores.collegeboard.org/pawra/home.action",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
