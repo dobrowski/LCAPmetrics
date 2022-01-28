@@ -35,7 +35,7 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                                "LEA and site CCSS and ELD implementation plans and teacher participation in CCSS and ELD training.", #5
                                rep("student information systems", 3),
                                rep("Dashboard",2),#10
-                               "",
+                               rep("Dashboard",1),
                                rep("Dashboard",3), 
                                "Dataquest",#15 # https://www.cde.ca.gov/ci/gs/hs/eapindex.asp  doesn't exist, maybe in CCI? 
                                "Dashboard",
@@ -84,8 +84,8 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                   "website" = c("https://www.cde.ca.gov/ds/sd/df/filesstaffdemo.asp",
                                 rep("",7), #5
                                 rep("Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",2),
-                                "",
-                                rep("Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/",2),
+                                
+                                rep("Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/",3),
                                 "Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",
                                 "https://www.cde.ca.gov/ds/sd/sd/filesreclass.asp", #10
                                 "Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/",
@@ -99,17 +99,16 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                                 "https://www.cde.ca.gov/ds/sd/sd/filesed.asp",
                                 rep("",1)
                   ),
-                  "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
+                  "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. CDE will be releasing new data in February or March of 2022.  It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
                                rep("",7), #5
-                               rep("Since this is from 2018-19, it is recommended to use local data, such as interims or NWEA, rather than data from two years ago.",2),
-                               "It is not possible to calculate students that completed both A-G courses and also completed a CTE course with public data. Your SIS or CALPADS Report 3.15 and 15.2 may be helpful.", # just use the CCI indicator too. 
-                               rep("Note 2019-20 data is available on the Dashboard. This is calculated using the number of students prepared and approaching prepared. ",2), # just use the CCI indicator too. 
+                               rep("Since this is from 2018-19, it is recommended to use local data, such as interims, iReady or NWEA, rather than data from three years ago.  If you did administer CAASPP in Spring of 2021, you may be able to identify your local DFS but it is not in a publicly available data source.",2),
+                                # just use the CCI indicator too. 
+                               rep("Note 2020-21 data is available on the Dashboard Additional Reports.",3), # just use the CCI indicator too. 
                                rep("",2), #10  #  Look at Title III AMOA 2  reporting
-                               "Note 2019-20 data is available on the Dashboard. Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard. Please also look at College Board Online https://scores.collegeboard.org/pawra/home.action",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
-                               rep("",2),  #   https://www.cde.ca.gov/ci/gs/hs/eapindex.asp
-                               "",
-                               "",
-                               "",
+                               "Note 2020-21 data is available on the Dashboard Additional Reports. Please note this is the percentage of the graduating cohort that passed TWO AP exams. The percentage of students that passed a single AP exam is not available on the Dashboard. Please also look at College Board Online https://scores.collegeboard.org/pawra/home.action",  #  Look at AP data file,  also add link to College Board Online https://scores.collegeboard.org/pawra/home.action
+                               "Note this is only available for districts that administered CAASPP",
+                               rep("",4),  #   https://www.cde.ca.gov/ci/gs/hs/eapindex.asp
+                           
                                "Consider daily participation or weekly engagement records.", #15
 
                                "CALPADS Report 14.1 and 14.2 may be helpful.", #17
@@ -374,13 +373,13 @@ indicators <- indicators %>%
            cred.rate.wt = scales::percent( cred.rate.wt/100 , accuracy = .1 ),
            elpi = scales::percent( elpi/100 , accuracy = .1 ),
            reclass_rate = scales::percent( reclass_rate/100 , accuracy = .1 ),
-           ap_perc = scales::percent( ap_perc , accuracy = .1 ),
-           ag_perc = scales::percent( ag_perc , accuracy = .1 ),
-           cte_perc = scales::percent( cte_perc , accuracy = .1 ),
+           ap_perc = scales::percent( ap_perc/100 , accuracy = .1 ),
+           ag_perc = scales::percent( ag_perc/100 , accuracy = .1 ),
+           cte_perc = scales::percent( cte_perc/100 , accuracy = .1 ),
            chronic = scales::percent( chronic/100 , accuracy = .1 ),
            grad = scales::percent( grad/100 , accuracy = .1 ),
            Dropout_Rate = scales::percent( Dropout_Rate/100 , accuracy = .1 ),
-  #         ag_cte_perc = scales::percent( ag_cte_perc/100 , accuracy = .1 )
+           ag_cte_perc = scales::percent( ag_cte_perc/100 , accuracy = .1 )
            
            
            )

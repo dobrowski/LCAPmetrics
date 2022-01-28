@@ -61,7 +61,7 @@ joinder <- left_join(metrics, metrics_dist) %>%
 
 
 ---
-title: `r metrics_dist[20,2]` LCAP Metrics Report
+title: `r metrics_dist[21,2]` 2022 LCAP Metrics Report
 ---
 
 
