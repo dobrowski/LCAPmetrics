@@ -53,51 +53,66 @@ metrics <- tibble("priority_area" = c(rep("Conditions for Learning",8),rep("Pupi
                   "description" = c("Teachers: Fully Credentialed & Appropriately Assigned", 
                                     "Standards-aligned Instructional Materials for every student",
                                     "School Facilities in “Good Repair” per CDE’s Facility Inspection Tool (FIT)",
-                                    "Implementation of all CA state standards for all students", 
-                                    "Implmentation of how ELs will access the CCSS and ELD standards", #5
-                                    "Students have access and are enrolled in a broad course of study (Social Science, Health, VAPA, Science, PE, World Language)", 
-                                    "Students have access and are enrolled in programs and services developed and provided to low income, English learner and foster youth pupils",
-                                    "Students have access and are enrolled in programs and services developed and provided to students with disabilities.", #8
+                                    "implementation of all CA state standards for all students", 
+                                    "implmentation of how ELs will access the CCSS and ELD standards", #5
+                                    "students have access and are enrolled in a broad course of study (Social Science, Health, VAPA, Science, PE, World Language)", 
+                                    "students have access and are enrolled in programs and services developed and provided to low income, English learner and foster youth pupils",
+                                    "students have access and are enrolled in programs and services developed and provided to students with disabilities", #8
                                     
                                     "State CAASPP assessments (Math DFS)", 
                                     "State CAASPP assessments (ELA DFS)", 
-                                    "Percent of pupils that have successfully completed both A-G courses and CTE courses", 
-                                    "Percent of pupils that have successfully completed A-G courses", 
-                                    "Percent of pupils that have successfully completed CTE courses", 
-                                    "Percent of ELs who progress in English proficiency (ELPAC)",
+                                    "percent of pupils that have successfully completed both A-G courses and CTE courses", 
+                                    "percent of pupils that have successfully completed A-G courses", 
+                                    "percent of pupils that have successfully completed CTE courses", 
+                                    "percent of ELs who progress in English proficiency (ELPAC)",
                                     "EL reclassification rate", #13
-                                    "Percent of pupils that pass AP exams with a score of 3 or higher",
-                                    "Pupils prepared for college by the EAP (ELA/Math CAASPP Score of 3 or higher)",
-                                    "If available, outcomes for subjects listed in course access" ,
-                                    "Parent input in decision-making",
+                                    "percent of pupils that pass AP exams with a score of 3 or higher",
+                                    "pupils prepared for college by the EAP (ELA/Math CAASPP Score of 3 or higher)",
+                                    "outcomes for subjects listed in course access" ,
+                                    "parent input in decision-making",
                                     "Parental Participation in programs for Unduplicated Pupils (UPs)", #18
                                     "Parental Participation in programs for Students with Disabilities", 
-                                    "Attendance rates", 
-                                    "Chronic absenteeism (CA) rates", 
+                                    "attendance rates", 
+                                    "Chronic Absenteeism rates", 
                                     "Middle school dropout rates", 
                                     "High school dropout rates", 
                                     "High school graduation rates", #24
                                     "Suspension rates", 
                                     "Expulsion rates", 
-                                    "Other local measures (Surveys regarding safety and school connectedness)"
+                                    "other local measures (Surveys regarding safety and school connectedness)"
                   ),
-                  "website" = c("https://www.cde.ca.gov/ds/sd/df/filesstaffdemo.asp",
+                  "website" = c("https://www.cde.ca.gov/ds/ad/staffdemo.asp",
                                 rep("",7), #5
                                 rep("Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",2),
                                 
                                 rep("Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/",3),
                                 "Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/datafiles2019.asp",
-                                "https://www.cde.ca.gov/ds/sd/sd/filesreclass.asp", #10
+                                "https://www.cde.ca.gov/ds/ad/filesreclass.asp", #10
                                 "Dashboard Datafiles at https://www.cde.ca.gov/ta/ac/cm/",
                                 "caaspp-elpac.cde.ca.gov",
                                 rep("",5), #16
                                 "https://www.cde.ca.gov/ds/ad/filesabd.asp",
                                 "",
-                                "https://www.cde.ca.gov/ds/sd/sd/filesacgr.asp",
-                                "https://www.cde.ca.gov/ds/sd/sd/filesacgr.asp", #20
-                                "https://www.cde.ca.gov/ds/sd/sd/filessd.asp",
-                                "https://www.cde.ca.gov/ds/sd/sd/filesed.asp",
+                                "https://www.cde.ca.gov/ds/ad/filesacgr.asp",
+                                "https://www.cde.ca.gov/ds/ad/filesacgr.asp", #20
+                                "https://www.cde.ca.gov/ds/ad/filessd.asp",
+                                "https://www.cde.ca.gov/ds/ad/filesed.asp",
                                 rep("",1)
+                  ),
+                  "year" = c("2018-19",
+                             rep("",7), #5
+                             rep("2018-19",2),
+                             rep("2020-21",3),
+                             "2018-19",
+                             "2020-21", #10
+                             "2020-21",
+                             "2020-21",
+                             rep("",5), #16
+                             "2020-21",
+                             "",
+                             rep("2020-21",4),
+                             rep("",1)
+                    
                   ),
                   "notes" = c( "Please note this only looks at teachers and not adminstrators, pupil services, itinerant nor push-in/pull-out teachers. The most recent available public data is 2018-19. CDE will be releasing new data in February or March of 2022.  It is grouped at the district level, and is weighted by percent FTE.  It does not yet look at proper assignment of teachers, only credential status. Please also reference your Williams Report."  ,
                                rep("",7), #5

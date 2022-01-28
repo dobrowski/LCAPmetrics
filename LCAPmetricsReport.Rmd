@@ -48,8 +48,8 @@ metrics_dist <- ind_dist %>%
 
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
-                              colorize( glue("The {description} is unavailable in public data sets.  It can be located in {source}. {notes}"),"lightgray"),
-                              colorize( glue("The {description} is ***{rate}*** based on data from {website}. {notes}"
+                              colorize( glue("The {description} is unavailable in public data sets.  It can be located in {source}. {notes}"),"darkgray"),
+                              colorize( glue("The {description} for {year} is ***{rate}*** based on data from {website}. {notes}"
                                              ), "black")
                               )
     )
