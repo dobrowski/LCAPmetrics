@@ -1,9 +1,3 @@
-
-
-library(shiny)
-library(rmarkdown)
-
-
 library(shiny)
 library(here)
 library(jsonlite)
@@ -11,11 +5,12 @@ library(rmarkdown)
 library(knitr)
 library(tidyverse)
 library(glue)
+library(markdown)
 
 
 indicators <- read_rds("indicators.rds")
 series_ids <- indicators$cds
-names(series_ids) <- indicators$DistrictName
+names(series_ids) <- indicators$districtname
 
 
 # Define UI for application that draws a histogram
@@ -37,7 +32,7 @@ shinyUI(fluidPage(
      br(),
      br(),
      conditionalPanel(condition = "output.reportbuilt",
-                      downloadButton("download", "Download LCAP Report", 
+                      downloadButton("download", "Download LCAP Metrics", 
                                      style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
         ),
 

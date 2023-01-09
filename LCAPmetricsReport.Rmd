@@ -48,8 +48,8 @@ metrics_dist <- ind_dist %>%
 
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
-                              colorize( glue("The {description} is unavailable in public data sets.  It can be located in {source}. {notes}"),"darkgray"),
-                              colorize( glue("The {description} for {year} is ***{rate}*** based on data from {website}. {notes}"
+                              colorize( glue("<p style='background-color:wheat;'>The {description} is unavailable in public data sets.  It can be located in {source}. {notes} </p>"),"darkgray"),
+                              colorize( glue("<p style='background-color:sandybrown;'> The {description} for {year} is ***{rate}*** based on data from {website}. {notes} </p>"
                                              ), "black")
                               )
     )
@@ -67,11 +67,12 @@ title: `r metrics_dist[21,2]` 2022 LCAP Metrics Report
 
 ## Report Purpose
 
-The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items in grey do not have publicly available data for your LEA, whereas items in black do have data to present. 
+The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. 
 
 Please note that the most recently available data is used, but it several cases because of COVID-19 and the de facto suspension of the state dashboard, the data represented comes from dataquest and in a few cases from the 2019 dashboard representing the 2018-19 school year. MCOE and CDE encourage you to use current local data from this school year when available.  
 
 ------
+
 
 ## Required Metrics
 
@@ -96,7 +97,6 @@ cat(paste(out, collapse = '\n'))
 
 ## LCAP Identified Need Section
 
-Because of COVID-19 and no dashboard data for this year, this section is not needed. 
 
 ~~These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included.~~ 
 
