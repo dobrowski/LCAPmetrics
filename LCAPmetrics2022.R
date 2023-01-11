@@ -151,6 +151,7 @@ write_rds(metrics, "metrics.rds")
 
 # write_excel_csv(metrics,"metrics.csv")
 
+### Dashboard -------
 
 # dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://drive.google.com/open?id=1XqGRRjQaFMMVshgF0HhnL7Ch9lnxVEYD
 # 
@@ -160,7 +161,17 @@ write_rds(metrics, "metrics.rds")
 #     mutate(cds = as.numeric(cds)) %>%
 #     mutate(cds = as.character(cds))
 # 
-# write_rds(dashboard_mry, "dashboard_mry.rds")
+
+dashboard_mry <- tbl(con, "DASH_ALL_2022") %>%
+     filter(countyname == "Monterey",
+            rtype == "D"
+    ) %>%  
+    collect()  
+
+
+
+
+write_rds(dashboard_mry, "dashboard_mry.rds")
 
 ### CSI ------
 
