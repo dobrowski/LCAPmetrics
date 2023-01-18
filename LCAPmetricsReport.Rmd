@@ -17,6 +17,7 @@ library(rmarkdown)
 library(knitr)
 library(tidyverse)
 library(glue)
+library(DT)
 
 dist <- params$dist
 
@@ -25,6 +26,8 @@ metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 csi_mry <- read_rds("csi_mry.rds")
 undup.count <- read_rds("undup.rds")
+dash.mry.da <- read_rds("dash_mry_da.rds")
+
 
 colorize <- function(x, color) {
   if (knitr::is_latex_output()) {
@@ -67,7 +70,7 @@ title: `r metrics_dist[4,2]` 2022 LCAP Metrics Report
 
 ## Report Purpose
 
-The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. 
+The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
 
 Please note that the most recently available data is used, with a prefernce for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2021-22 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
 
@@ -140,6 +143,14 @@ redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) els
 student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.low$phrases) else
                        "No student groups"
 
+
+### DA ----
+
+da.dist <- dash.mry.da %>%
+    filter(cds == dist) %>%
+    select(studentgroup.long,indicator2)
+
+
 ```
 
 ### Indicators which are Lowest Status overall 
@@ -151,6 +162,23 @@ student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.l
 
 `r student.need` were two or more performance levels below ALL students in the district.
 
+### DA Eligible
+
+```{r da-table, echo=FALSE}
+datatable(da.dist,
+          colnames = c("Student Group", "Indicator"),
+          caption = "Student Groups Qualifying for DA on 2022 Dashboard",
+          rownames = FALSE,
+          
+          options = list(pageLength = 20,
+                         lengthChange = FALSE,
+                         searching = FALSE,
+                         dom = 't')) 
+```
+
+### DA Districts Additional Report
+
+If your district is eligible for DA, you can find additional data at https://da-monterey.netlify.app/
 
 -----------
 
@@ -167,7 +195,9 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 
 ```
 
-`r csi.words`
+~~The official list of CSI schools will be released by CDE in early 2023.~~
+
+~~`r csi.words`~~
 
 
 
@@ -204,7 +234,7 @@ cat(paste(out, collapse = '\n'))
 undup <- undup.count %>% 
     filter(cds == dist) 
 
-undup.words <- glue( "The most recent percentage of unduplicated students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was { scales::percent( undup$undup.perc , accuracy = .1 ) }." )
+undup.words <- glue( "The most recent percentage of unduplicated students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( undup$undup.perc , accuracy = .1 ) }**." )
 
 ```
 

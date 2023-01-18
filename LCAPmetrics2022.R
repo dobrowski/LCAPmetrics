@@ -25,7 +25,8 @@ con <- mcoe_sql_con()
 
 
 
-metrics <- read_csv("metrics.csv")
+metrics <- read_csv("metrics.csv") %>%
+    mutate(notes = replace_na(notes, ""))
 
 ### Initial creation, now just import ----- 
 
@@ -184,6 +185,125 @@ csi_mry <- csi_all %>%
     mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  ))
 
 write_rds(csi_mry, "csi_mry.rds")
+
+
+
+### DA -----
+
+
+
+dash2 <- tbl(con,"DASH_ALL_2022") %>%
+    filter(countyname == "Monterey",
+           rtype == "D",
+           cds == dist) %>%
+    collect () %>%
+    mutate(indicator2 = recode(indicator,
+                               "ela" = "<br><img src='icons/1ela.png' width='40' /><br>4<br>ELA",
+                               "math" = "<br><img src='icons/2math.png' width='40' /><br>4<br>Math",
+                               "elpi" = "<br><img src='icons/3elpi.png' width='40' /><br>4<br>ELPI",
+                               "grad" = "<br><img src='icons/4grad.png' width='40' /><br>5<br>Grad",
+                               "chronic" = "<br><img src='icons/5chronic.png' width='40' /><br>5<br>Chronic<br>Absenteeism",
+                               "susp" = "<br><img src='icons/6suspend.png' width='40' /><br>6<br>Suspension"
+    ))
+
+
+
+# Add tibble for studentgroup join
+studentgroup.tbl <- tribble(
+    ~studentgroup, ~ definition,
+    "",    	"Student Group"
+    ,"ALL",	"All Students"
+    ,"AA",	"Black/African American"
+    ,"AI",	"American Indian or Alaska Native"
+    ,"AS",	"Asian"
+    ,"FI",	"Filipino"
+    ,"HI",	"Hispanic"
+    ,"PI",	"Pacific Islander"
+    ,"WH",	"White"
+    ,"MR",	"Multiple Races/Two or More"
+    ,"EL",	"English Learner"
+    ,"SED",	"Socioeconomically Disadvantaged"
+    ,"SWD",	"Students with Disabilities"
+    ,"FOS",	"Foster Youth"
+    ,"HOM",	"Homeless Youth"
+)
+
+
+
+dash.old <- tbl(con,"DASH_ALL") %>%
+    filter(countyname == "Monterey",
+           rtype == "D",
+           # cds == dist
+    ) %>%
+    collect () %>%
+    mutate(cds = as.numeric(cds)) %>%
+    filter(cds == dist) %>%
+    left_join(studentgroup.tbl) %>%
+    #   left_join_codebook("DASH_SUSP", "studentgroup") %>%
+    mutate(definition = recode(definition, "Student Group" = "English Learner")) %>% 
+    rename(studentgroup.long = definition)
+
+# %>%
+# mutate(indicator2 = recode(indicator,
+#                            "ela" = "<br><img src='icons/1ela.png' width='40' /><br>4 -  ELA",
+#                            "math" = "<br><img src='icons/2math.png' width='40' /><br>4 -  Math",
+#                            "elpi" = "<br><img src='icons/3elpi.png' width='40' /><br>4 - ELPI",
+#                            "grad" = "<br><img src='icons/4grad.png' width='40' /><br>5 - Grad",
+#                            "chronic" = "<br><img src='icons/5chronic.png' width='40' /><br>5 - Chronic <br>Absenteeism",
+#                            "susp" = "<br><img src='icons/6suspend.png' width='40' /><br>6 - Suspension"
+#    )
+# )
+
+
+
+
+
+school_dir <- tbl(con, "SCHOOL_DIR") %>%
+    collect() %>%
+    rename("cds" = "cds_code")
+
+
+
+dash.mry <- dash2 %>%
+    filter(countyname == "Monterey",
+           rtype == "D")
+
+
+
+### Determine DA eligibility --------
+
+
+add_cols <- function(df, cols) {
+    add <- cols[!cols %in% names(df)]
+    if(length(add) !=0 ) df[add] <- NA
+    return(df)
+}
+
+
+
+da.list <- dash.mry  %>%
+    select(districtname, studentgroup, statuslevel, indicator) %>%
+    pivot_wider(id_cols = c(districtname,studentgroup),
+                names_from = indicator,
+                values_from = statuslevel
+    ) %>%
+    add_cols(c("grad","chronic")) %>%
+    transmute(districtname, 
+              studentgroup,
+              priority4 = case_when(ela == 1 & math == 1 ~ TRUE,
+                                    elpi == 1 ~ TRUE,
+                                    TRUE ~ FALSE),
+              priority5 = case_when(grad == 1 ~ TRUE,
+                                    chronic == 1 ~ TRUE,
+                                    TRUE ~ FALSE),
+              priority6 = case_when(susp == 1 ~ TRUE,
+                                    TRUE ~ FALSE),
+              DA.eligible  = case_when(priority4+priority5+priority6 >=2 ~ "DA",
+                                       TRUE ~ "Not")
+    )
+
+dash.mry.da <- left_join(dash.mry, da.list)
+
 
 
 ### Manipulate -----
