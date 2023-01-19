@@ -192,92 +192,20 @@ write_rds(csi_mry, "csi_mry.rds")
 
 
 
-dash2 <- tbl(con,"DASH_ALL_2022") %>%
+dash.mry <- tbl(con,"DASH_ALL_2022") %>%
     filter(countyname == "Monterey",
            rtype == "D",
-           cds == dist) %>%
+#           cds == dist
+           ) %>%
     collect () %>%
     mutate(indicator2 = recode(indicator,
-                               "ela" = "<br><img src='icons/1ela.png' width='40' /><br>4<br>ELA",
-                               "math" = "<br><img src='icons/2math.png' width='40' /><br>4<br>Math",
-                               "elpi" = "<br><img src='icons/3elpi.png' width='40' /><br>4<br>ELPI",
-                               "grad" = "<br><img src='icons/4grad.png' width='40' /><br>5<br>Grad",
-                               "chronic" = "<br><img src='icons/5chronic.png' width='40' /><br>5<br>Chronic<br>Absenteeism",
-                               "susp" = "<br><img src='icons/6suspend.png' width='40' /><br>6<br>Suspension"
+                               "ela" = "CAASPP English Language Arts (ELA)",
+                               "math" = "CAASPP Math",
+                               "elpi" = "English Learner Progress Indicator (ELPI)",
+                               "grad" = "Graduation Rate",
+                               "chronic" = "Chronic Absenteeism",
+                               "susp" = "Suspension Rate"
     ))
-
-
-
-# Add tibble for studentgroup join
-studentgroup.tbl <- tribble(
-    ~studentgroup, ~ definition,
-    "",    	"Student Group"
-    ,"ALL",	"All Students"
-    ,"AA",	"Black/African American"
-    ,"AI",	"American Indian or Alaska Native"
-    ,"AS",	"Asian"
-    ,"FI",	"Filipino"
-    ,"HI",	"Hispanic"
-    ,"PI",	"Pacific Islander"
-    ,"WH",	"White"
-    ,"MR",	"Multiple Races/Two or More"
-    ,"EL",	"English Learner"
-    ,"SED",	"Socioeconomically Disadvantaged"
-    ,"SWD",	"Students with Disabilities"
-    ,"FOS",	"Foster Youth"
-    ,"HOM",	"Homeless Youth"
-)
-
-
-
-dash.old <- tbl(con,"DASH_ALL") %>%
-    filter(countyname == "Monterey",
-           rtype == "D",
-           # cds == dist
-    ) %>%
-    collect () %>%
-    mutate(cds = as.numeric(cds)) %>%
-    filter(cds == dist) %>%
-    left_join(studentgroup.tbl) %>%
-    #   left_join_codebook("DASH_SUSP", "studentgroup") %>%
-    mutate(definition = recode(definition, "Student Group" = "English Learner")) %>% 
-    rename(studentgroup.long = definition)
-
-# %>%
-# mutate(indicator2 = recode(indicator,
-#                            "ela" = "<br><img src='icons/1ela.png' width='40' /><br>4 -  ELA",
-#                            "math" = "<br><img src='icons/2math.png' width='40' /><br>4 -  Math",
-#                            "elpi" = "<br><img src='icons/3elpi.png' width='40' /><br>4 - ELPI",
-#                            "grad" = "<br><img src='icons/4grad.png' width='40' /><br>5 - Grad",
-#                            "chronic" = "<br><img src='icons/5chronic.png' width='40' /><br>5 - Chronic <br>Absenteeism",
-#                            "susp" = "<br><img src='icons/6suspend.png' width='40' /><br>6 - Suspension"
-#    )
-# )
-
-
-
-
-
-school_dir <- tbl(con, "SCHOOL_DIR") %>%
-    collect() %>%
-    rename("cds" = "cds_code")
-
-
-
-dash.mry <- dash2 %>%
-    filter(countyname == "Monterey",
-           rtype == "D")
-
-
-
-### Determine DA eligibility --------
-
-
-add_cols <- function(df, cols) {
-    add <- cols[!cols %in% names(df)]
-    if(length(add) !=0 ) df[add] <- NA
-    return(df)
-}
 
 
 
@@ -287,7 +215,6 @@ da.list <- dash.mry  %>%
                 names_from = indicator,
                 values_from = statuslevel
     ) %>%
-    add_cols(c("grad","chronic")) %>%
     transmute(districtname, 
               studentgroup,
               priority4 = case_when(ela == 1 & math == 1 ~ TRUE,
@@ -302,9 +229,11 @@ da.list <- dash.mry  %>%
                                        TRUE ~ "Not")
     )
 
-dash.mry.da <- left_join(dash.mry, da.list)
+dash.mry.da <- left_join(dash.mry, da.list) %>%
+    filter(DA.eligible == "DA",
+           statuslevel == 1)
 
-
+write_rds(dash.mry.da,"dash_mry_da.rds")
 
 ### Manipulate -----
 
@@ -329,6 +258,28 @@ susp <- pull.dash("DASH_SUSP", "susp")
 math <- pull.dash("DASH_MATH","math")
 
 ela <- pull.dash("DASH_ELA","ela")
+
+
+caaspp.full <- tbl(con, "CAASPP") %>%
+    filter(Subgroup_ID == "1",
+           Test_Year == max(Test_Year),
+           County_Code == "27",
+           School_Code == "0000000",
+           Grade == "13") %>%  
+    select(County_Code:Test_Id, Percentage_Standard_Met_and_Above) %>%
+    collect()  
+
+
+caaspp <- caaspp.full %>%
+    mutate(cds = paste0(County_Code,District_Code,School_Code),
+           Percentage_Standard_Met_and_Above = as.numeric(Percentage_Standard_Met_and_Above)
+    ) %>%
+    select(cds, Test_Id ,Percentage_Standard_Met_and_Above) %>%
+    pivot_wider(names_from = Test_Id, values_from = Percentage_Standard_Met_and_Above ) %>%
+    na.omit() %>%
+    mutate(caaspp = glue("{round(`1`,1)}% in ELA and {round(`2`,1)}% in Math") ) %>%
+    select(cds,caaspp)
+
 
 elpi <- tbl(con, "DASH_ELPI") %>%
     filter(reportingyear == max(reportingyear)) %>%
@@ -553,6 +504,7 @@ reclass <-  reclass.full %>%
 
 
 indicators <- list(   susp, exp , math, ela, 
+                      caaspp,
                       A_G, eap, # AP,
                       chronic, elpi, grad, drop, reclass,
                       cred_rate) %>%
