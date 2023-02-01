@@ -154,23 +154,11 @@ write_rds(metrics, "metrics.rds")
 
 ### Dashboard -------
 
-# dashboard_all <- read_rds(here("data","Dashboard_all.rds")) # Also at https://drive.google.com/open?id=1XqGRRjQaFMMVshgF0HhnL7Ch9lnxVEYD
-# 
-# dashboard_mry <- dashboard_all %>% 
-#     filter(str_detect("Monterey",countyname),
-#            year == yr) %>%
-#     mutate(cds = as.numeric(cds)) %>%
-#     mutate(cds = as.character(cds))
-# 
-
 dashboard_mry <- tbl(con, "DASH_ALL_2022") %>%
      filter(countyname == "Monterey",
-            rtype == "D"
+            rtype == "D" | charter_flag == "Y"
     ) %>%  
     collect()  
-
-
-
 
 write_rds(dashboard_mry, "dashboard_mry.rds")
 
@@ -182,20 +170,30 @@ csi_all <- read_excel(here("data","essaassistancestudentgroup19.xlsx"), range = 
 csi_mry <- csi_all %>%
     filter( str_extract(cds, "[1-9]{1,2}") == 27,
             str_detect(AssistanceStatus2019, "CSI")) %>%
-    mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  ))
+    mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )). # This will need to be updated in future years for charter CSI
 
 write_rds(csi_mry, "csi_mry.rds")
+
+
+### Required Goals ------
+
+
+req.goals.student <- read_excel(here("data","leas2023perec52064.xlsx"), 
+                                range = "A6:C138") %>%
+    filter(str_starts(CDS,"27"))
+
+write_rds(req.goals.student, "req_goals_student.rds")
+
 
 
 
 ### DA -----
 
 
-
 dash.mry <- tbl(con,"DASH_ALL_2022") %>%
     filter(countyname == "Monterey",
-           rtype == "D",
-#           cds == dist
+           rtype == "D" | charter_flag == "Y"
+           #           cds == dist
            ) %>%
     collect () %>%
     mutate(indicator2 = recode(indicator,
@@ -260,11 +258,28 @@ math <- pull.dash("DASH_MATH","math")
 ela <- pull.dash("DASH_ELA","ela")
 
 
+charter.school.codes <- c(
+    "0112177",
+    "0116491",
+    "0124297",
+    "2730232" ,
+    "6119663",
+    "2730240",
+    "6118962",
+    "0118349")
+
 caaspp.full <- tbl(con, "CAASPP") %>%
     filter(Subgroup_ID == "1",
            Test_Year == max(Test_Year),
            County_Code == "27",
-           School_Code == "0000000",
+           School_Code %in% c("0000000","0112177",
+                              "0116491",
+                              "0124297",
+                              "2730232" ,
+                              "6119663",
+                              "2730240",
+                              "6118962",
+                              "0118349"),
            Grade == "13") %>%  
     select(County_Code:Test_Id, Percentage_Standard_Met_and_Above) %>%
     collect()  
@@ -374,11 +389,11 @@ exp <- tbl(con, "EXP")  %>%
     filter(county_name == "Monterey",
            reporting_category == "TA",
            academic_year == max(academic_year),
-           charter_yn == "All"
+           aggregate_level == "D" & charter_yn == "No" | aggregate_level == "S" & charter_yn == "Yes" 
            ) %>%  # Charter included Yes/No
     collect() %>%
     mutate(exp = (unduplicated_count_of_students_expelled_total*1000/cumulative_enrollment)%>% round2(3) )  %>%
-    mutate(cds = paste0(county_code,district_code,school_code))  %>%
+    mutate(cds = paste0(county_code,district_code,school_code)) # %>%
     select(cds, exp)
 
 ## Credential Teachers

@@ -27,6 +27,8 @@ dashboard_mry <- read_rds("dashboard_mry.rds")
 csi_mry <- read_rds("csi_mry.rds")
 undup.count <- read_rds("undup.rds")
 dash.mry.da <- read_rds("dash_mry_da.rds")
+req.goals.student <- read_rds("req_goals_student.rds")
+
 
 
 colorize <- function(x, color) {
@@ -72,7 +74,7 @@ title: `r metrics_dist[4,2]` 2022 LCAP Metrics Report
 
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
 
-Please note that the most recently available data is used, with a prefernce for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2021-22 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
+Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2021-22 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
 
 
 
@@ -199,6 +201,24 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 
 ~~`r csi.words`~~
 
+
+## Required Goals 
+
+```{r}
+
+
+req.goals.student2 <- req.goals.student %>%
+    filter(CDS == dist) %>%
+    select(groups = `Targeted Student Group(s)`)
+
+req.goals <- if ( length( req.goals.student2$groups) > 0 ) req.goals.student2$groups else
+                       "No student groups"
+
+
+```
+
+
+`r req.goals` are required to have their own goal on your LCAP.  Please see https://www.cde.ca.gov/fg/aa/lc/ for additional details. 
 
 
 ------
