@@ -149,7 +149,8 @@ student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.l
 ### DA ----
 
 da.dist <- dash.mry.da %>%
-    filter(cds == dist) %>%
+    filter(cds == dist,
+           !is.na(indicator2)) %>%
     select(studentgroup.long,indicator2)
 
 
@@ -166,8 +167,20 @@ da.dist <- dash.mry.da %>%
 
 ### DA Eligible
 
-```{r da-table, echo=FALSE}
-datatable(da.dist,
+```{r da-table, echo=FALSE, message=FALSE, include=FALSE}
+
+# datatable(da.dist,
+#           colnames = c("Student Group", "Indicator"),
+#           caption = "Student Groups Qualifying for DA on 2022 Dashboard",
+#           rownames = FALSE,
+#           
+#           options = list(pageLength = 20,
+#                          lengthChange = FALSE,
+#                          searching = FALSE,
+#                          dom = 't')) 
+
+
+da.need <- if ( length( da.dist$studentgroup.long) > 0 ) {datatable(da.dist,
           colnames = c("Student Group", "Indicator"),
           caption = "Student Groups Qualifying for DA on 2022 Dashboard",
           rownames = FALSE,
@@ -175,12 +188,19 @@ datatable(da.dist,
           options = list(pageLength = 20,
                          lengthChange = FALSE,
                          searching = FALSE,
-                         dom = 't')) 
+                         dom = 't'))} else
+                       "The District is not eligible for DA"
+
+
+da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find additional data at https://da-monterey.netlify.app/") else print("")
+
 ```
 
-### DA Districts Additional Report
+`r da.need`
 
-If your district is eligible for DA, you can find additional data at https://da-monterey.netlify.app/
+
+`r da.need2`
+
 
 -----------
 
@@ -197,9 +217,8 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 
 ```
 
-~~The official list of CSI schools will be released by CDE in early 2023.~~
 
-~~`r csi.words`~~
+`r csi.words`
 
 
 ## Required Goals 

@@ -165,12 +165,12 @@ write_rds(dashboard_mry, "dashboard_mry.rds")
 ### CSI ------
 
 # This needs updating to the right file once released by CDE
-csi_all <- read_excel(here("data","essaassistancestudentgroup19.xlsx"), range = "A3:G9975")
+csi_all <- read_excel(here("data","essaassistance22.xlsx"), range = "A3:AF9949")
 
 csi_mry <- csi_all %>%
     filter( str_extract(cds, "[1-9]{1,2}") == 27,
-            str_detect(AssistanceStatus2019, "CSI")) %>%
-    mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )). # This will need to be updated in future years for charter CSI
+            str_detect(AssistanceStatus2022, "CSI")) %>%
+    mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )) # This will need to be updated in future years for charter CSI
 
 write_rds(csi_mry, "csi_mry.rds")
 
@@ -189,49 +189,79 @@ write_rds(req.goals.student, "req_goals_student.rds")
 
 ### DA -----
 
+# This code calculates DA on its own.  Use if the official list is not available 
 
-dash.mry <- tbl(con,"DASH_ALL_2022") %>%
-    filter(countyname == "Monterey",
-           rtype == "D" | charter_flag == "Y"
-           #           cds == dist
-           ) %>%
-    collect () %>%
-    mutate(indicator2 = recode(indicator,
-                               "ela" = "CAASPP English Language Arts (ELA)",
-                               "math" = "CAASPP Math",
-                               "elpi" = "English Learner Progress Indicator (ELPI)",
-                               "grad" = "Graduation Rate",
-                               "chronic" = "Chronic Absenteeism",
-                               "susp" = "Suspension Rate"
-    ))
+# dash.mry <- tbl(con,"DASH_ALL_2022") %>%
+#     filter(countyname == "Monterey",
+#            rtype == "D" | charter_flag == "Y"
+#            #           cds == dist
+#            ) %>%
+#     collect () %>%
+#     mutate(indicator2 = recode(indicator,
+#                                "ela" = "CAASPP English Language Arts (ELA)",
+#                                "math" = "CAASPP Math",
+#                                "elpi" = "English Learner Progress Indicator (ELPI)",
+#                                "grad" = "Graduation Rate",
+#                                "chronic" = "Chronic Absenteeism",
+#                                "susp" = "Suspension Rate"
+#     ))
+# 
+# 
+# 
+# da.list <- dash.mry  %>%
+#     select(districtname, studentgroup, statuslevel, indicator) %>%
+#     pivot_wider(id_cols = c(districtname,studentgroup),
+#                 names_from = indicator,
+#                 values_from = statuslevel
+#     ) %>%
+#     transmute(districtname, 
+#               studentgroup,
+#               priority4 = case_when(ela == 1 & math == 1 ~ TRUE,
+#                                     elpi == 1 ~ TRUE,
+#                                     TRUE ~ FALSE),
+#               priority5 = case_when(grad == 1 ~ TRUE,
+#                                     chronic == 1 ~ TRUE,
+#                                     TRUE ~ FALSE),
+#               priority6 = case_when(susp == 1 ~ TRUE,
+#                                     TRUE ~ FALSE),
+#               DA.eligible  = case_when(priority4+priority5+priority6 >=2 ~ "DA",
+#                                        TRUE ~ "Not")
+#     )
+# 
+# dash.mry.da <- left_join(dash.mry, da.list) %>%
+#     filter(DA.eligible == "DA",
+#            statuslevel == 1)
 
 
 
-da.list <- dash.mry  %>%
-    select(districtname, studentgroup, statuslevel, indicator) %>%
-    pivot_wider(id_cols = c(districtname,studentgroup),
-                names_from = indicator,
-                values_from = statuslevel
-    ) %>%
-    transmute(districtname, 
-              studentgroup,
-              priority4 = case_when(ela == 1 & math == 1 ~ TRUE,
-                                    elpi == 1 ~ TRUE,
-                                    TRUE ~ FALSE),
-              priority5 = case_when(grad == 1 ~ TRUE,
-                                    chronic == 1 ~ TRUE,
-                                    TRUE ~ FALSE),
-              priority6 = case_when(susp == 1 ~ TRUE,
-                                    TRUE ~ FALSE),
-              DA.eligible  = case_when(priority4+priority5+priority6 >=2 ~ "DA",
-                                       TRUE ~ "Not")
+
+dash.mry.da.2 <- read_excel(here("data","assistancestatus22.xlsx"), range = "A6:AA999", sheet = "District and COE 2022") %>%
+    filter(Countyname == "Monterey") %>%
+    pivot_longer(cols = ends_with("priorities")) %>%
+    mutate(indicator2 = case_when(value == "A" ~ "Met Criteria in Priority Areas 4 (Academic Indicators), 5 (Chronic Absenteeism and/or Graduation), and 6 (Suspensions)",
+                                    value == "B" ~ "Met Criteria in Priority Areas 4 (Academic Indicators) and 5 (Chronic Absenteeism and/or Graduation)",
+                                    value == "C" ~ "Met Criteria in Priority Areas 4 (Academic Indicators) and 6 (Suspensions)",
+                                    value == "D" ~ "Met Criteria in Priority Areas 5 (Chronic Absenteeism and/or Graduation) and 6 (Suspensions)",
+                                    ),
+           studentgroup.long = case_when(name == "AApriorities"	~ "Black/African American",
+                                    name == "AIpriorities" ~	"American Indian or Alaska Native American",
+           name == "ASpriorities" ~	"Asian American",
+                                    name == "ELpriorities" ~	"English Learner",
+           name == "FIpriorities" ~	"Filipino",
+                                    name == "FOSpriorities"	 ~ "Foster Youth",
+           name == "HIpriorities" ~	"Hispanic",
+                                    name == "HOMpriorities"	~ "Homeless",
+           name == "PIpriorities" ~	"Pacific Islander",
+                                    name == "SEDpriorities" ~	"Socioeconomically Disadvantaged",
+           name == "SWDpriorities" ~	"Students with Disabilities",
+                                    name == "TOMpriorities" ~	"Two or More Races",
+           name == "WHpriorities" ~	"White"
+           ),
+           cds = CDS
     )
 
-dash.mry.da <- left_join(dash.mry, da.list) %>%
-    filter(DA.eligible == "DA",
-           statuslevel == 1)
 
-write_rds(dash.mry.da,"dash_mry_da.rds")
+write_rds(dash.mry.da.2,"dash_mry_da.rds")
 
 ### Manipulate -----
 
