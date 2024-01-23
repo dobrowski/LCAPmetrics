@@ -8,22 +8,16 @@ library(glue)
 library(markdown)
 
 
-
 indicators <- read_rds("indicators.rds")
 series_ids <- indicators$cds
 names(series_ids) <- indicators$districtname
-
-
-
-icon.df <- read_rds("icons.rds")
-
 
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
 
     # Application title
-    titlePanel("Monterey County LCAP Metrics"),
+    titlePanel("Monterey County LCAP Metrics for LEAs"),
 
     # Sidebar with a slider input for number of bins
     sidebarLayout(
@@ -37,22 +31,15 @@ shinyUI(fluidPage(
                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
      br(),
      br(),
-     # conditionalPanel(condition = "output.reportbuilt",
-     #                  downloadButton("download", "Download LCAP Metrics", 
-     #                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
-        
-     uiOutput("icon")
-     
-     ),
+     conditionalPanel(condition = "output.reportbuilt",
+                      downloadButton("download", "Download LCAP Metrics", 
+                                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+        ),
 
         # Show a plot of the generated distribution
         mainPanel(
        #     "Holding area"
-            
-            htmlOutput("report"),
-            
-            
-   #         includeMarkdown("Instructions.Rmd"),
+            includeMarkdown("Instructions.Rmd"),
             img(src='logo.png', height="30%", width="30%", align = "right")
         )
     )

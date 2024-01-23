@@ -7,13 +7,14 @@
 ### Load libraries -----
 
 library(tidyverse)
+library(googlesheets4)
 library(here)
 library(vroom)
 library(readxl)
 library(glue)
  library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
 
-yr <- 2022
+yr <- 2024
 
 options(scipen = 999)
 
@@ -27,6 +28,14 @@ con <- mcoe_sql_con()
 
 metrics <- read_csv("metrics.csv") %>%
     mutate(notes = replace_na(notes, ""))
+
+
+
+icon.df <- read.csv("icons.csv")
+
+
+write_rds(icon.df, "icons.rds")
+
 
 ### Initial creation, now just import ----- 
 
@@ -154,9 +163,10 @@ write_rds(metrics, "metrics.rds")
 
 ### Dashboard -------
 
-dashboard_mry <- tbl(con, "DASH_ALL_2022") %>%
+dashboard_mry <- tbl(con, "DASH_ALL") %>%
      filter(countyname == "Monterey",
-            rtype == "D" | charter_flag == "Y"
+            rtype == "D" | charter_flag == "Y",
+            reportingyear == (yr - 1)
     ) %>%  
     collect()  
 
@@ -177,13 +187,15 @@ write_rds(csi_mry, "csi_mry.rds")
 
 ### Required Goals ------
 
+# 
+# req.goals.student <- read_excel(here("data","leas2023perec52064.xlsx"), 
+#                                 range = "A6:C138") %>%
+#     filter(str_starts(CDS,"27"))
+# 
+# write_rds(req.goals.student, "req_goals_student.rds")
+# 
 
-req.goals.student <- read_excel(here("data","leas2023perec52064.xlsx"), 
-                                range = "A6:C138") %>%
-    filter(str_starts(CDS,"27"))
-
-write_rds(req.goals.student, "req_goals_student.rds")
-
+# Need to Add Equity Multiplier when available
 
 
 
@@ -234,28 +246,34 @@ write_rds(req.goals.student, "req_goals_student.rds")
 
 
 
-
-dash.mry.da.2 <- read_excel(here("data","assistancestatus22.xlsx"), range = "A6:AA999", sheet = "District and COE 2022") %>%
+dash.mry.da.2 <- read_excel(here("data","assistancestatus23.xlsx"), range = "A6:AD999", sheet = "District and COE 2023") %>%
     filter(Countyname == "Monterey") %>%
     pivot_longer(cols = ends_with("priorities")) %>%
     mutate(indicator2 = case_when(value == "A" ~ "Met Criteria in Priority Areas 4 (Academic Indicators), 5 (Chronic Absenteeism and/or Graduation), and 6 (Suspensions)",
                                     value == "B" ~ "Met Criteria in Priority Areas 4 (Academic Indicators) and 5 (Chronic Absenteeism and/or Graduation)",
-                                    value == "C" ~ "Met Criteria in Priority Areas 4 (Academic Indicators) and 6 (Suspensions)",
-                                    value == "D" ~ "Met Criteria in Priority Areas 5 (Chronic Absenteeism and/or Graduation) and 6 (Suspensions)",
+                                    value == "D" ~ "Met Criteria in Priority Areas 4 (Academic Indicators) and 6 (Suspensions)",
+                                    value == "C" ~ "Met Criteria in Priority Areas 5 (Chronic Absenteeism and/or Graduation) and 6 (Suspensions)",
+                                  value =="E" ~ 	"Met Criteria in Priority Areas 4 (Academic Indicators) and 8 (College/Career)",
+                                  value =="F" ~ 	"Met Criteria in Priority Areas 5 (Chronic Absenteeism and/or Graduation) and 8 (College/Career)",
+                                  value =="G" ~ 	"Met Criteria in Priority Areas 6 (Suspensions) and 8 (College/Career)",
+                                  value =="H" ~ 	"Met Criteria in Priority Areas 4 (Academic Indicators), 5 (Chronic Absenteeism and/or Graduation), and 8 (College/Career)",
+                                  value =="I" ~ 	"Met Criteria in Priority Areas 4 (Academic Indicators), 6 (Suspensions), and 8 (College/Career)",
+                                  value =="J" ~ 	"Met Criteria in Priority Areas 5 (Chronic Absenteeism and/or Graduation), 6 (Suspensions), and 8 (College/Career)",
+                                  value =="K" ~ 	"Met Criteria in Priority Areas 4 (Academic Indicators), 5 (Chronic Absenteeism and/or Graduation), 6 (Suspensions), and 8 (College/Career)"
                                     ),
            studentgroup.long = case_when(name == "AApriorities"	~ "Black/African American",
-                                    name == "AIpriorities" ~	"American Indian or Alaska Native American",
-           name == "ASpriorities" ~	"Asian American",
-                                    name == "ELpriorities" ~	"English Learner",
-           name == "FIpriorities" ~	"Filipino",
-                                    name == "FOSpriorities"	 ~ "Foster Youth",
-           name == "HIpriorities" ~	"Hispanic",
-                                    name == "HOMpriorities"	~ "Homeless",
-           name == "PIpriorities" ~	"Pacific Islander",
-                                    name == "SEDpriorities" ~	"Socioeconomically Disadvantaged",
-           name == "SWDpriorities" ~	"Students with Disabilities",
-                                    name == "TOMpriorities" ~	"Two or More Races",
-           name == "WHpriorities" ~	"White"
+                                         name == "AIpriorities" ~	"American Indian or Alaska Native American",
+                                         name == "ASpriorities" ~	"Asian American",
+                                         name == "ELpriorities" ~	"English Learner",
+                                         name == "FIpriorities" ~	"Filipino",
+                                         name == "FOSpriorities"	 ~ "Foster Youth",
+                                         name == "HIpriorities" ~	"Hispanic",
+                                         name == "HOMpriorities"	~ "Homeless",
+                                         name == "PIpriorities" ~	"Pacific Islander",
+                                         name == "SEDpriorities" ~	"Socioeconomically Disadvantaged",
+                                         name == "SWDpriorities" ~	"Students with Disabilities",
+                                         name == "TOMpriorities" ~	"Two or More Races",
+                                         name == "WHpriorities" ~	"White"
            ),
            cds = CDS
     )
@@ -289,27 +307,21 @@ ela <- pull.dash("DASH_ELA","ela")
 
 
 charter.school.codes <- c(
-    "0112177",
-    "0116491",
-    "0124297",
-    "2730232" ,
-    "6119663",
-    "2730240",
-    "6118962",
-    "0118349")
+    "0112177", # Monterey Bay Charter
+    "0116491", # Open Door Charter
+    "0124297", # Bay View Academy
+    "2730232" , # Home Charter
+    "6119663", # Oasis
+    "2730240", # Learning for Life
+    "6118962", # International School
+    "0118349" # Big Sur Charter
+    ) 
 
 caaspp.full <- tbl(con, "CAASPP") %>%
     filter(Subgroup_ID == "1",
            Test_Year == max(Test_Year),
            County_Code == "27",
-           School_Code %in% c("0000000","0112177",
-                              "0116491",
-                              "0124297",
-                              "2730232" ,
-                              "6119663",
-                              "2730240",
-                              "6118962",
-                              "0118349"),
+           School_Code %in% c("0000000",charter.school.codes),
            Grade == "13") %>%  
     select(County_Code:Test_Id, Percentage_Standard_Met_and_Above) %>%
     collect()  
@@ -335,36 +347,39 @@ elpi <- tbl(con, "DASH_ELPI") %>%
 
 # Holding place for new A-G Dashboard report in late January 2023
 
-A_G <- tbl(con, "DASH_CCI") %>%
-    filter(studentgroup == "ALL",
-           reportingyear == max(reportingyear),
-           countyname == "Monterey",
-           rtype == "D" | rtype == "S" & charter_flag == "Y" 
-           ) %>%
-    mutate(# ag_cte = curr_prep_agplus + curr_prep_cteplus + curr_aprep_ag + curr_aprep_cte,
-           # ag_cte_perc = ag_cte*100/currdenom ,
-           ag_perc = ag_pct ,
-           cte_perc = cte_pct ,
-           ag_cte_perc = ag_cte_pct,
-           ap_perc = ap_pct ,
-           )  %>%
-#    %>%
-    collect() %>%
-  select(cds, ends_with("perc"))
+# A_G <- tbl(con, "DASH_CCI") %>%
+#     filter(studentgroup == "ALL",
+#            reportingyear == max(reportingyear),
+#            countyname == "Monterey",
+#            rtype == "D" | rtype == "S" & charter_flag == "Y" 
+#            ) %>%
+#     mutate(# ag_cte = curr_prep_agplus + curr_prep_cteplus + curr_aprep_ag + curr_aprep_cte,
+#            # ag_cte_perc = ag_cte*100/currdenom ,
+#            ag_perc = ag_pct ,
+#            cte_perc = cte_pct ,
+#            ag_cte_perc = ag_cte_pct,
+#            ap_perc = ap_pct ,
+#            )  %>%
+#     collect() %>%
+#   select(cds, ends_with("perc"))
+
+# Based on Dashboard additional report UC/CSU and CTE Met
+A_G <- read_sheet("https://docs.google.com/spreadsheets/d/1aX3sSlrWsOSyd9lzjME_fppAEbZE0EiXDkdYgygseAY/edit#gid=0") %>%
+    mutate(cds = as.character(cds))
+
+
 
 # Note, this is the best possible calculation, but will be slightly inflated for students that completed A-G and also complete a CTE pathway. 
 # It is not possible to get the exact figure with the aggregate data available
 
 
-# AP <- dashboard_mry %>%
-#     filter(ind == "cci",
-#            studentgroup == "ALL") %>%
-#     mutate(ap = (curr_prep_apexam/currdenom) %>% round2(3)*100) %>%
-#     select(cds:countyname,ap ) 
+AP <- dashboard_mry %>%
+    filter(indicator == "CCI",
+           studentgroup == "ALL") %>%
+    mutate(ap = (curr_prep_apexam/currdenom) %>% round2(3)*100) %>%
+    select(cds:countyname,ap )
 # Note this is percentage of cohort that passed TWO AP exams. PErcentage that passed a single one is not available on Dashboard
 
-
-#  Should we add the Science CAASPP scores too?  
 
 
 ## EAP 
@@ -374,7 +389,7 @@ eap.full <- tbl(con, "CAASPP") %>%
     filter(Subgroup_ID == "1",
            Test_Year == max(Test_Year),
            County_Code == "27",
-           School_Code == "0000000",
+           School_Code %in% c("0000000",charter.school.codes),
            Grade == "11") %>%  
     select(County_Code:Test_Id, eap = Percentage_Standard_Met_and_Above) %>%
     collect()  
@@ -426,6 +441,12 @@ exp <- tbl(con, "EXP")  %>%
     mutate(exp = (unduplicated_count_of_students_expelled_total*1000/cumulative_enrollment)%>% round2(3) )  %>%
     mutate(cds = paste0(county_code,district_code,school_code))  %>%
     select(cds, exp)
+
+
+
+
+
+
 
 ## Credential Teachers
 
@@ -541,7 +562,7 @@ reclass <-  reclass.full %>%
     pivot_wider(values_from = c("reclassified", "ELenroll"), names_from = "YEAR") %>%
     transmute(cds,
         reclass_rate = (reclassified_new*100/ELenroll_new_minus_one) %>% round2(1) ) %>%
-     bind_rows(temp.charter)
+     bind_rows(reclass.charter)
 
 ### Combine all the dashboard files ----
 
@@ -551,7 +572,7 @@ reclass <-  reclass.full %>%
 
 indicators <- list(   susp, exp , math, ela, 
                       caaspp,
-                      A_G, eap, # AP,
+                      A_G, eap,  AP,
                       chronic, elpi, grad, drop, reclass,
                       cred_rate) %>%
     reduce( left_join)

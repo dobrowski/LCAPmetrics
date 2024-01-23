@@ -26,6 +26,7 @@ metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 csi_mry <- read_rds("csi_mry.rds")
 undup.count <- read_rds("undup.rds")
+el.count <- read_rds("el.rds")
 dash.mry.da <- read_rds("dash_mry_da.rds")
 req.goals.student <- read_rds("req_goals_student.rds")
 
@@ -66,7 +67,7 @@ joinder <- left_join(metrics, metrics_dist) %>%
 
 
 ---
-title: `r metrics_dist[4,2]` 2022 LCAP Metrics Report
+title: `r metrics_dist[4,2]` 2024-25 LCAP Metrics Report
 ---
 
 
@@ -74,7 +75,7 @@ title: `r metrics_dist[4,2]` 2022 LCAP Metrics Report
 
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
 
-Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2021-22 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
+Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2022-23 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
 
 
 
@@ -82,6 +83,7 @@ Please note that the most recently available data is used, with a preference for
 
 ## LCAP Identified Need Section
 
+[Not Yet current for 2024-25]
 
 These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included. 
 
@@ -167,6 +169,8 @@ da.dist <- dash.mry.da %>%
 
 ### DA Eligible
 
+
+
 ```{r da-table, echo=FALSE, message=FALSE, include=FALSE}
 
 # datatable(da.dist,
@@ -206,6 +210,8 @@ da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find ad
 
 ## CSI-identified Schools 
 
+[Not Yet current for 2024-25]
+
 
 ```{r csi, echo=FALSE, include=FALSE}
 
@@ -213,7 +219,7 @@ da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find ad
 csi <- csi_mry %>% 
     filter(cds == dist) 
 
-csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$schoolname), " have been identified as CSI schools.") else "There are no schools in the district identified for CSI and the section can be skipped by entering 'N/A'."
+csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$schoolname), " have been identified as CSI schools.") else paste0("There are no schools in the district identified for CSI and the section can be skipped by entering '", metrics_dist[4,2],  " does not have any schools identified as CSI'.")
 
 ```
 
@@ -222,6 +228,8 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 
 
 ## Required Goals 
+
+[Not required for 2024-25 unless Equity Multiplier]
 
 ```{r}
 
@@ -245,6 +253,7 @@ req.goals <- if ( length( req.goals.student2$groups) > 0 ) req.goals.student2$gr
 
 ## Required Metrics
 
+
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
 
 out = NULL
@@ -267,6 +276,7 @@ cat(paste(out, collapse = '\n'))
 ## Unduplicated Percentage
 
 
+
 ```{r undup, echo=FALSE, include=FALSE}
 
 
@@ -275,11 +285,26 @@ undup <- undup.count %>%
 
 undup.words <- glue( "The most recent percentage of unduplicated students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( undup$undup.perc , accuracy = .1 ) }**." )
 
+
+el.lang <- el.count %>% 
+    filter(cds == dist) 
+
+
+el.words <- glue( "The most recent percentage of EL students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( el.lang$el.perc , accuracy = .1 ) }**.  The total count of EL students was **{ el.lang$el.count }**.  ") 
+
+el.words2 <- if ( el.lang$el.perc >= .15 | el.lang$el.count >=50 ) " Your district is required to have a DELAC." else " Your district is NOT required to have a DELAC."
+
+
+
 ```
 
 `r undup.words`
 
 
+`r el.words`
+
+
+`r el.words2`
 
 ----------
 
