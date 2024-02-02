@@ -8,6 +8,9 @@ library(knitr)
 library(tidyverse)
 library(glue)
 
+
+icon.df <- read_rds("icons.rds")
+
 # Define server logic required to pull and process data
 shinyServer(function(input, output) {
     

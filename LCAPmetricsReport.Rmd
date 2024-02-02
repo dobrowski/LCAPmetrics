@@ -18,12 +18,14 @@ library(knitr)
 library(tidyverse)
 library(glue)
 library(DT)
+library(gt)
 
 dist <- params$dist
 
 indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
+lcap.reds <- read_rds("lcap_reds.rds")
 csi_mry <- read_rds("csi_mry.rds")
 undup.count <- read_rds("undup.rds")
 el.count <- read_rds("el.rds")
@@ -153,64 +155,121 @@ student.need <- if ( length( lea.sub.low$phrases) > 0 ) combine_words( lea.sub.l
 da.dist <- dash.mry.da %>%
     filter(cds == dist,
            !is.na(indicator2)) %>%
-    select(studentgroup.long,indicator2)
+    select(studentgroup.long,indicator2) %>%
+    arrange(studentgroup.long,indicator2)
+
+
+
+# 
+# ### Indicators which are Lowest Status overall 
+# 
+# `r redorange` were the lowest status on the dashboard for ALL students overall.
+# 
+# 
+# ### Student groups whose performance level was two or more levels below students overall
+# 
+# `r student.need` were two or more performance levels below ALL students in the district.
+
+
 
 
 ```
 
-### Indicators which are Lowest Status overall 
 
-`r redorange` were the lowest status on the dashboard for ALL students overall.
+-------
+
+### Reds on the Dashboard 
+
+LEAs are required to include actions for every Red indicator on their Dashboard for student groups, schools, or stuent groups at schools.  
 
 
-### Student groups whose performance level was two or more levels below students overall
+<details>
 
-`r student.need` were two or more performance levels below ALL students in the district.
+<summary>[**Click here to display table**]{style="color:green;"}</summary>
+
+```{r reds, echo=FALSE, include=TRUE, results = 'asis'}
+
+
+### Dashboard Reds -----
+
+dist.name <- metrics_dist[4,2]
+
+print(dist.name)
+
+lcap.reds <- lcap.reds %>%
+    filter(districtname == dist.name,
+           
+           ) %>% 
+     select(indicator, studentgroup.long, schoolname) %>%
+    arrange(indicator, studentgroup.long, schoolname)
+
+
+gt::gt(lcap.reds) |>
+        tab_header(title = "Red Student Groups and Indicators on Dashboard") |>
+      tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
+  cols_label(
+    studentgroup.long = html("Student Group"),
+    indicator = html("Indicator"),
+        schoolname = html("School Name"),
+
+  )
+
+```
+
+
+</details>
+
+
+------
 
 ### DA Eligible
 
-
+Districts that are eligible Differentiate Assistance need to provide a summary of the work underway as part of receiving technical assistance. 
 
 ```{r da-table, echo=FALSE, message=FALSE, include=FALSE}
 
-# datatable(da.dist,
+# da.need <- if ( length( da.dist$studentgroup.long) > 0 ) {datatable(da.dist,
 #           colnames = c("Student Group", "Indicator"),
-#           caption = "Student Groups Qualifying for DA on 2022 Dashboard",
+#           caption = "Student Groups Qualifying for DA on 2023 Dashboard",
 #           rownames = FALSE,
 #           
 #           options = list(pageLength = 20,
 #                          lengthChange = FALSE,
 #                          searching = FALSE,
-#                          dom = 't')) 
+#                          dom = 't'))} else
+#                        "The District is not eligible for DA"
+
+da.need <- if ( length( da.dist$studentgroup.long) > 0 ) {
+    gt(da.dist) |>
+        tab_header(title = "DA Eligible Student Groups and Indicators") |>
+      tab_source_note(source_note = "Source: https://www.cde.ca.gov/fg/aa/lc/" ) |>
+  cols_label(
+    studentgroup.long = html("Student Group"),
+    indicator2 = html("Indicator"),
+  )
+    
+    } else "The District is not eligible for DA"
 
 
-da.need <- if ( length( da.dist$studentgroup.long) > 0 ) {datatable(da.dist,
-          colnames = c("Student Group", "Indicator"),
-          caption = "Student Groups Qualifying for DA on 2022 Dashboard",
-          rownames = FALSE,
-          
-          options = list(pageLength = 20,
-                         lengthChange = FALSE,
-                         searching = FALSE,
-                         dom = 't'))} else
-                       "The District is not eligible for DA"
+# da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find additional data at https://da-monterey.netlify.app/") else print("")
 
-
-da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find additional data at https://da-monterey.netlify.app/") else print("")
+if ( length( da.dist$studentgroup.long) > 0 ) {
+    da.need
+    } else print("The District is not eligible for DA")
 
 ```
+
+
 
 `r da.need`
 
 
-`r da.need2`
-
 
 -----------
 
-## CSI-identified Schools 
+### CSI-identified Schools 
 
-[Not Yet current for 2024-25]
+For CSI identified schools, it is required to address the CSI prompt in the LCAP template. 
 
 
 ```{r csi, echo=FALSE, include=FALSE}
@@ -227,9 +286,9 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 `r csi.words`
 
 
-## Required Goals 
+### Equity Multiplier Schools 
 
-[Not required for 2024-25 unless Equity Multiplier]
+[Not yet available]
 
 ```{r}
 
@@ -245,13 +304,22 @@ req.goals <- if ( length( req.goals.student2$groups) > 0 ) req.goals.student2$gr
 ```
 
 
-`r req.goals` are required to have their own goal on your LCAP.  Please see https://www.cde.ca.gov/fg/aa/lc/ for additional details. 
+`r req.goals` are required to have their own goal on your LCAP.  
+
+In addition, if you have an equity multiplier schools be sure to: xxx. 
+
+Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional details. 
 
 
 ------
 
 
 ## Required Metrics
+
+
+<details>
+
+<summary>[**Click here to display required metrics**]{style="color:purple;"}</summary>
 
 
 ```{r loop, results = "asis", echo=FALSE,  include=FALSE}
@@ -271,10 +339,12 @@ cat(paste(out, collapse = '\n'))
 ```
 
 
+</details>
+
+
 -----------
 
 ## Unduplicated Percentage
-
 
 
 ```{r undup, echo=FALSE, include=FALSE}
@@ -305,6 +375,18 @@ el.words2 <- if ( el.lang$el.perc >= .15 | el.lang$el.count >=50 ) " Your distri
 
 
 `r el.words2`
+
+
+-----------
+
+## Local Indicators 
+
+As a reminder, local indicators also need to be completed on the same timeline as LCAPs.  There are three required steps. 
+
+1. Reflect on each of the indicators.  It is highly recommended to use the self-reflection tools provided by the CDE at https://www.cde.ca.gov/ta/ac/cm/localindicators.asp
+2. Present as a separate non-consent agenda item at the same governing board meeting as the LCAP is approved before the end of June. 
+3. Enter the information in myCDEconnect before the deadline (TBD) and be sure to enter the date they were presented to the board in June.  
+
 
 ----------
 

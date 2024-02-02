@@ -5,14 +5,14 @@
 
 
 ### Load libraries -----
-
+# remotes::install_github("dobrowski/MCOE")
 library(tidyverse)
 library(googlesheets4)
 library(here)
 library(vroom)
 library(readxl)
 library(glue)
- library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
+# library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
 
 yr <- 2024
 
@@ -22,8 +22,43 @@ options(scipen = 999)
 con <- mcoe_sql_con()
 
 
+
+charter.school.codes <- c(
+    "0112177", # Monterey Bay Charter
+    "0116491", # Open Door Charter
+    "0124297", # Bay View Academy
+    "2730232" , # Home Charter
+    "6119663", # Oasis
+    "2730240", # Learning for Life
+    "6118962", # International School
+    "0118349" # Big Sur Charter
+) 
+
+
+# Used to avoid duplication of school and district for Red Indicators 
+single.school.codes <- c(
+    "27659790000000"	,#	Bradley Union Elementary
+    "27659956026082"	,#	Chualar Union
+    "27660276026108"	,#	Graves Elementary
+    "27660760000000"	,#	Lagunita Elementary
+    "27660846026157"	,#	Mission Union Elementary
+    "27661676026629"	,#	San Antonio Union Elementary
+    "27661756026637"	,#	San Ardo Union Elementary
+    "27661836026645"	,#	San Lucas Union Elementary
+    "27751500000000"	#	Big Sur Unified
+)
+
+
+
+
+
+
 ### Import data -------
 
+icon.df <- read.csv("icons.csv")
+
+
+write_rds(icon.df, "icons.rds")
 
 
 metrics <- read_csv("metrics.csv") %>%
@@ -31,10 +66,6 @@ metrics <- read_csv("metrics.csv") %>%
 
 
 
-icon.df <- read.csv("icons.csv")
-
-
-write_rds(icon.df, "icons.rds")
 
 
 ### Initial creation, now just import ----- 
@@ -172,14 +203,36 @@ dashboard_mry <- tbl(con, "DASH_ALL") %>%
 
 write_rds(dashboard_mry, "dashboard_mry.rds")
 
+
+
+lcap.reds <- tbl(con, "DASH_ALL") %>%
+    filter(countyname == "Monterey",
+           reportingyear == (yr - 1),
+           color == 1 | (indicator == "CCI" & statuslevel == 1 ),
+           #       !is.na(currnsizemet)
+    ) %>%  
+    collect()  %>% 
+    filter(cds %notin% single.school.codes) %>% # To Avoid duplication on Single School Districts
+    mutate(schoolname = replace_na(schoolname, "Districtwide"),
+           districtname = if_else(!is.na(charter_flag), schoolname, districtname), 
+           ) %>%
+    select(cds, districtname, schoolname, studentgroup.long, indicator) %>%
+    arrange(indicator, studentgroup.long, schoolname)
+
+
+write_rds(lcap.reds, "lcap_reds.rds")
+
+
 ### CSI ------
 
 # This needs updating to the right file once released by CDE
-csi_all <- read_excel(here("data","essaassistance22.xlsx"), range = "A3:AF9949")
+csi_all <- read_excel(here("data","essaassistance23.xlsx"), 
+                      sheet = "2023-24 ESSA State Schools",
+                      range = "A3:AI9949")
 
 csi_mry <- csi_all %>%
     filter( str_extract(cds, "[1-9]{1,2}") == 27,
-            str_detect(AssistanceStatus2022, "CSI")) %>%
+            str_detect(AssistanceStatus2023, "CSI")) %>%
     mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )) # This will need to be updated in future years for charter CSI
 
 write_rds(csi_mry, "csi_mry.rds")
@@ -306,16 +359,6 @@ math <- pull.dash("DASH_MATH","math")
 ela <- pull.dash("DASH_ELA","ela")
 
 
-charter.school.codes <- c(
-    "0112177", # Monterey Bay Charter
-    "0116491", # Open Door Charter
-    "0124297", # Bay View Academy
-    "2730232" , # Home Charter
-    "6119663", # Oasis
-    "2730240", # Learning for Life
-    "6118962", # International School
-    "0118349" # Big Sur Charter
-    ) 
 
 caaspp.full <- tbl(con, "CAASPP") %>%
     filter(Subgroup_ID == "1",
@@ -336,6 +379,29 @@ caaspp <- caaspp.full %>%
     na.omit() %>%
     mutate(caaspp = glue("{round(`1`,1)}% in ELA and {round(`2`,1)}% in Math") ) %>%
     select(cds,caaspp)
+
+
+
+cast.full <- tbl(con, "CAST") %>%
+    filter(Demographic_ID == "1",
+           Test_Year == max(Test_Year),
+           County_Code == "27",
+           School_Code %in% c("0000000",charter.school.codes),
+           Grade == "13") %>%  
+    collect()  
+
+
+cast <- cast.full %>%
+    transmute(cds = paste0(County_Code,District_Code,School_Code),
+           science = as.numeric(Percentage_Standard_Met_and_Above)
+    ) # %>%
+   # na.omit() 
+
+
+
+
+
+
 
 
 elpi <- tbl(con, "DASH_ELPI") %>%
@@ -571,7 +637,7 @@ reclass <-  reclass.full %>%
 
 
 indicators <- list(   susp, exp , math, ela, 
-                      caaspp,
+                      caaspp, cast,
                       A_G, eap,  AP,
                       chronic, elpi, grad, drop, reclass,
                       cred_rate) %>%
@@ -581,6 +647,7 @@ indicators <- indicators %>%
     filter(rtype == "D" | charter_flag == "Y") %>%
     mutate(susp = scales::percent( susp/100 , accuracy = .1 ),
            cred.rate.wt = scales::percent( cred.rate.wt/100 , accuracy = .1 ),
+           science = scales::percent( science/100 , accuracy = .1 ),
            elpi = scales::percent( elpi/100 , accuracy = .1 ),
            reclass_rate = scales::percent( reclass_rate/100 , accuracy = .1 ),
            ap_perc = scales::percent( ap_perc/100 , accuracy = .1 ),

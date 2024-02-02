@@ -14,8 +14,7 @@ series_ids <- indicators$cds
 names(series_ids) <- indicators$districtname
 
 
-
-icon.df <- read_rds("icons.rds")
+# icon.df <- read_rds("icons.rds")
 
 
 
