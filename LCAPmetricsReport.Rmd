@@ -29,6 +29,7 @@ lcap.reds <- read_rds("lcap_reds.rds")
 csi_mry <- read_rds("csi_mry.rds")
 undup.count <- read_rds("undup.rds")
 el.count <- read_rds("el.rds")
+ltel.count <- read_rds("ltel.rds")
 dash.mry.da <- read_rds("dash_mry_da.rds")
 req.goals.student <- read_rds("req_goals_student.rds")
 
@@ -56,7 +57,7 @@ metrics_dist <- ind_dist %>%
 
 joinder <- left_join(metrics, metrics_dist) %>%
     mutate(sentence = if_else(is.na(rate),
-                              colorize( glue("<p style='background-color:wheat;'>The {description} is unavailable in public data sets.  It can be located in {source}. {notes} </p>"),"darkgray"),
+                              colorize( glue("<p style='background-color:wheat;'>The {description} is unavailable in public data sets.  It can be located in {source}. {notes} </p>"),"gray35"),
                               colorize( glue("<p style='background-color:sandybrown;'> The {description} for {year} is ***{rate}*** based on data from {website}. {notes} </p>"
                                              ), "black")
                               )
@@ -83,11 +84,9 @@ Please note that the most recently available data is used, with a preference for
 
 -----------
 
-## LCAP Identified Need Section
+## Plan Summary
 
-[Not Yet current for 2024-25]
-
-These data points need to be included in the Identified Need section of the Plan Summary, along with steps being taken to address them.  Additional identified needs from local data or stakeholder processes can also be included. 
+These data points need to be included in the Plan Summary section, along with steps being taken to address them.  Additional identified needs from local data or educational partner processes can also be included. 
 
 ```{r needs, echo=FALSE, include=FALSE}
 
@@ -176,11 +175,19 @@ da.dist <- dash.mry.da %>%
 ```
 
 
--------
+### General Information
 
-### Reds on the Dashboard 
+For example, information about an LEA in terms of geography, enrollment, employment, the number and size of specific schools, recent community challenges, and other such information the LEA may wish to include can enable a reader to more fully understand the LEA’s LCAP. 
 
-LEAs are required to include actions for every Red indicator on their Dashboard for student groups, schools, or stuent groups at schools.  
+As part of this response, identify all schools within the LEA receiving Equity Multiplier funding. 
+
+
+
+------
+
+### Reflections: Lowest Performing 
+
+As part of this response, the LEA must identify all schools, student groups and student groups at schools which are at the lowest performance level, which will remain unchanged during the three-year LCAP cycle. 
 
 
 <details>
@@ -220,11 +227,12 @@ gt::gt(lcap.reds) |>
 </details>
 
 
+
 ------
 
-### DA Eligible
+### Reflections: Technical Assistance 
 
-Districts that are eligible Differentiate Assistance need to provide a summary of the work underway as part of receiving technical assistance. 
+Districts that are eligible for Differentiate Assistance need to identify the reason(s) the LEA is eligible and provide a summary of the work underway as part of receiving technical assistance. 
 
 ```{r da-table, echo=FALSE, message=FALSE, include=FALSE}
 
@@ -260,16 +268,14 @@ if ( length( da.dist$studentgroup.long) > 0 ) {
 ```
 
 
-
 `r da.need`
-
 
 
 -----------
 
-### CSI-identified Schools 
+### Comprehensive Support and Improvement 
 
-For CSI identified schools, it is required to address the CSI prompt in the LCAP template. 
+For CSI identified schools, it is required to address the three CSI prompts in the LCAP template. 
 
 
 ```{r csi, echo=FALSE, include=FALSE}
@@ -286,7 +292,28 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 `r csi.words`
 
 
-### Equity Multiplier Schools 
+
+-----------
+
+## Engaging Educational Partners 
+
+Consistent with statute, engagement should support comprehensive strategic planning, particularly to address and reduce disparities in opportunities and outcomes.  The following Educational Partners must be consulted:  
+
++ Teachers, 
++ Principals, 
++ Administrators, 
++ Other school personnel, 
++ Local bargaining units of the LEA, 
++ Parents, and 
++ Students
+
+A school district or COE receiving Equity Multiplier funds must also consult with educational partners at schools generating Equity Multiplier funds in the development of the LCAP, specifically, in the development of the required focus goal for each applicable school. 
+
+
+## Goals and Actions
+
+
+### Required Goals: Equity Multiplier Schools 
 
 [Not yet available]
 
@@ -306,9 +333,77 @@ req.goals <- if ( length( req.goals.student2$groups) > 0 ) req.goals.student2$gr
 
 `r req.goals` are required to have their own goal on your LCAP.  
 
-In addition, if you have an equity multiplier schools be sure to: xxx. 
+In addition, if you have an equity multiplier school, it is required to establish a Focus Goal addressing the qualifications for the equity multiplier school and student group. It is also necessary to talk to your educational partners about the use of the funds. It is also required to identify all schools within the LEA receiving Equity multiplier funding in the General Information Section.
 
 Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional details. 
+
+
+-------
+
+### Required Actions: Reds on the Dashboard 
+
+LEAs are required to include actions for every Red indicator on their Dashboard for student groups, schools, or student groups at schools. 
+
+Note these are listed above in the Annual Performance section. 
+
+
+Insert cluster graphing???
+
+
+-------
+
+### Required Actions: Differentiated Assistance
+
+LEAs eligible for Differentiated Assistance must include specific actions related to implementation of work underway. 
+
+Note these are listed above in the Technical Assistance section. 
+
+
+------
+
+### Required Actions: English Learners and Long-Term English Learners
+
+
+```{r el, echo=FALSE, include=FALSE}
+
+
+# EL 
+
+el.lang <- el.count %>% 
+    filter(cds == dist) 
+
+
+el.words <- glue( "The most recent percentage of EL students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( el.lang$el.perc , accuracy = .1 ) }**.  The total count of EL students was **{ el.lang$el.count }**.  ") 
+
+el.words2 <- if ( el.lang$el.perc >= .15 | el.lang$el.count >=50 ) " Your district is required to have a DELAC, Language acquistion programs, and professional development for teachers." else " Your district is NOT required to have a DELAC."
+
+# LTEL
+
+ltel.lang <- ltel.count %>% 
+    filter(cds == dist) 
+
+
+ltel.words <- glue( "The most recent number of LTEL students from https://www.cde.ca.gov/ds/ad/filesltel.asp was **{ ltel.lang$ltel.sum }**.  ") 
+
+ltel.words2 <- if ( ltel.lang$ltel.sum >= 15 ) " Your district is required to have an LTEL dedicated action and professional development for teachers." else " Your district is NOT required to have dedicated LTEL actions."
+
+
+
+
+```
+
+
+`r el.words`
+
+
+`r el.words2`
+
+
+`r ltel.words`
+
+
+`r ltel.words2`
+
 
 
 ------
@@ -344,7 +439,7 @@ cat(paste(out, collapse = '\n'))
 
 -----------
 
-## Unduplicated Percentage
+## Unduplicated Percentage 
 
 
 ```{r undup, echo=FALSE, include=FALSE}
@@ -356,25 +451,9 @@ undup <- undup.count %>%
 undup.words <- glue( "The most recent percentage of unduplicated students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( undup$undup.perc , accuracy = .1 ) }**." )
 
 
-el.lang <- el.count %>% 
-    filter(cds == dist) 
-
-
-el.words <- glue( "The most recent percentage of EL students from https://www.cde.ca.gov/ds/sd/sd/filescupc.asp was **{ scales::percent( el.lang$el.perc , accuracy = .1 ) }**.  The total count of EL students was **{ el.lang$el.count }**.  ") 
-
-el.words2 <- if ( el.lang$el.perc >= .15 | el.lang$el.count >=50 ) " Your district is required to have a DELAC." else " Your district is NOT required to have a DELAC."
-
-
-
 ```
 
 `r undup.words`
-
-
-`r el.words`
-
-
-`r el.words2`
 
 
 -----------

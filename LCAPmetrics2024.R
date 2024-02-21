@@ -12,7 +12,7 @@ library(here)
 library(vroom)
 library(readxl)
 library(glue)
-# library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
+library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
 
 yr <- 2024
 
@@ -201,6 +201,10 @@ dashboard_mry <- tbl(con, "DASH_ALL") %>%
     ) %>%  
     collect()  
 
+
+dashboard_mry <- sunshine(dashboard_mry)
+
+
 write_rds(dashboard_mry, "dashboard_mry.rds")
 
 
@@ -220,12 +224,13 @@ lcap.reds <- tbl(con, "DASH_ALL") %>%
     arrange(indicator, studentgroup.long, schoolname)
 
 
+lcap.reds <- sunshine(lcap.reds)
+
 write_rds(lcap.reds, "lcap_reds.rds")
 
 
 ### CSI ------
 
-# This needs updating to the right file once released by CDE
 csi_all <- read_excel(here("data","essaassistance23.xlsx"), 
                       sheet = "2023-24 ESSA State Schools",
                       range = "A3:AI9949")
@@ -234,6 +239,10 @@ csi_mry <- csi_all %>%
     filter( str_extract(cds, "[1-9]{1,2}") == 27,
             str_detect(AssistanceStatus2023, "CSI")) %>%
     mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )) # This will need to be updated in future years for charter CSI
+
+
+
+csi_mry <- sunshine(csi_mry)
 
 write_rds(csi_mry, "csi_mry.rds")
 
@@ -332,32 +341,54 @@ dash.mry.da.2 <- read_excel(here("data","assistancestatus23.xlsx"), range = "A6:
     )
 
 
+
+sun.dash.da <- dash.mry.da.2 %>%
+    filter(str_detect(LEAname, "Alisal")) %>%
+    mutate(LEAname = "Sunshine Union",
+           cds = "99999990000000")
+
+
+dash.mry.da.2 <- dash.mry.da.2 %>%
+    bind_rows(sun.dash.da)
+
+
+
 write_rds(dash.mry.da.2,"dash_mry_da.rds")
 
 ### Manipulate -----
 
 
-pull.dash <- function(tablename, col){
-        tbl(con, tablename) %>%
+# pull.dash <- function(tablename, col){
+#         tbl(con, tablename) %>%
+#         filter(studentgroup == "ALL",
+#                reportingyear == max(reportingyear)) %>%
+#         select(cds:countyname, charter_flag, currstatus)  %>%
+#         collect()  %>%
+#         filter(str_detect(countyname,"Monterey")) %>%
+#         rename(!!col := currstatus)   # Note the :=  because of passing string to left side of argument
+# }
+
+pull.dash <- function(ind, col){
+        dashboard_mry %>%
+        mutate(studentgroup = if_else(indicator == "ELPI",  "ALL", studentgroup)) %>%
         filter(studentgroup == "ALL",
-               reportingyear == max(reportingyear)) %>%
+               indicator == ind) %>%
         select(cds:countyname, charter_flag, currstatus)  %>%
-        collect()  %>%
-        filter(str_detect(countyname,"Monterey")) %>%
         rename(!!col := currstatus)   # Note the :=  because of passing string to left side of argument
 }
 
 
-chronic <- pull.dash("DASH_CHRONIC","chronic")
+chronic <- pull.dash("CHRO","chronic")
 
-grad <- pull.dash("DASH_GRAD","grad")
+grad <- pull.dash("GRAD","grad")
 
-susp <- pull.dash("DASH_SUSP", "susp")
+susp <- pull.dash("SUSP", "susp")
 
-math <- pull.dash("DASH_MATH","math")
+math <- pull.dash("MATH","math")
 
-ela <- pull.dash("DASH_ELA","ela")
+ela <- pull.dash("ELA","ela")
 
+elpi <- pull.dash("ELPI","elpi")
 
 
 caaspp.full <- tbl(con, "CAASPP") %>%
@@ -404,11 +435,11 @@ cast <- cast.full %>%
 
 
 
-elpi <- tbl(con, "DASH_ELPI") %>%
-    filter(reportingyear == max(reportingyear)) %>%
-    select(cds:countyname, charter_flag, elpi = currstatus) %>%
-    collect() %>%
-    filter(str_detect(countyname,"Monterey")) 
+# elpi <- tbl(con, "DASH_ELPI") %>%
+#     filter(reportingyear == max(reportingyear)) %>%
+#     select(cds:countyname, charter_flag, elpi = currstatus) %>%
+#     collect() %>%
+#     filter(str_detect(countyname,"Monterey")) 
 
 
 # Holding place for new A-G Dashboard report in late January 2023
@@ -663,6 +694,24 @@ indicators <- indicators %>%
            )
 
 
+sunshine <- function(df) {
+    
+
+sun.df <- df %>%
+    filter(str_detect(districtname, "Alisal")) %>%
+    mutate(districtname = "Sunshine Union",
+           cds = "99999990000000")
+
+
+df %>%
+    bind_rows(sun.df)
+
+}
+
+
+indicators <- sunshine(indicators)
+
+
 write_rds(indicators ,here("indicators.rds"))
 
 
@@ -694,6 +743,14 @@ undup.count <- undup.count.full %>%
     bind_rows(undup.charter)
 
 
+
+
+undup.count <- undup.count %>%
+    filter(cds == "27659610000000") %>%
+    mutate(cds = "99999990000000") %>%
+    bind_rows(undup.count)
+
+
 write_rds(undup.count ,here("undup.rds"))
 
 
@@ -718,9 +775,65 @@ el.count <- undup.count.full %>%
     bind_rows(el.charter)
 
 
+
+
+el.count <- el.count %>%
+    filter(cds == "27659610000000") %>%
+    mutate(cds = "99999990000000") %>%
+    bind_rows(el.count)
+
+
+
 write_rds(el.count ,here("el.rds"))
 
 
+
+# LTEL Counts.
+
+
+ltel.count.full <- tbl(con, "ELAS") %>%
+ #   head(10) %>%
+    filter(academic_year == max(academic_year),
+           county_code == "27",
+           #school_code == "0000000"
+    ) %>%
+    collect() 
+
+
+
+ltel.charter <- ltel.count.full %>%
+    filter(charter == "Y",
+           gender == "ALL") %>%
+    group_by(county_code,district_code, school_code) %>%
+    transmute(ltel.sum = sum(ltel),
+              cds = glue('{county_code}{district_code}{school_code}') ) %>%
+    ungroup() %>%
+    select(ltel.sum, cds) %>%
+    unique() 
+
+
+ltel.count <- ltel.count.full %>%
+    filter(charter == "N/A",
+           gender == "ALL") %>%
+    group_by(county_code,district_code) %>%
+    transmute(ltel.sum = sum(ltel),
+              cds = glue('{county_code}{district_code}0000000') ) %>%
+    ungroup() %>%
+    select(ltel.sum, cds) %>%
+    distinct() %>%
+    bind_rows(ltel.charter)
+
+
+
+ltel.count <- ltel.count %>%
+    filter(cds == "27659610000000") %>%
+    mutate(cds = "99999990000000") %>%
+    bind_rows(ltel.count)
+
+
+
+
+write_rds(ltel.count ,here("ltel.rds"))
 
 
 
