@@ -20,7 +20,9 @@ names(series_ids) <- indicators$districtname
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
-
+    #Google analytics
+    tags$head(includeHTML("google-analytics.html")),
+    
     # Application title
     titlePanel("Monterey County LCAP Metrics"),
 

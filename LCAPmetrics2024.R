@@ -229,6 +229,29 @@ lcap.reds <- sunshine(lcap.reds)
 write_rds(lcap.reds, "lcap_reds.rds")
 
 
+cds.dist <- indicators %>%
+    select(cds,districtname)
+
+
+lcap.reds.pivot <- lcap.reds %>% 
+    select(districtname, studentgroup.long, schoolname, indicator) %>%
+    # Pivots to have indicator columns with lists of schools 
+    pivot_wider(names_from =  indicator,
+                values_from = schoolname
+    ) %>% 
+    rowwise() %>% 
+    # collapses the list columns to a string for the list of schools 
+    mutate(across(c(ELA, CHRO, MATH, SUSP, CCI, ELPI, GRAD ),  ~ paste(.x, collapse=', ') )
+    ) %>%
+    ungroup() %>%
+    left_join(cds.dist)
+
+
+
+write_rds(lcap.reds.pivot, "lcap_reds_pivot.rds")
+
+
+
 ### CSI ------
 
 csi_all <- read_excel(here("data","essaassistance23.xlsx"), 
@@ -245,6 +268,26 @@ csi_mry <- csi_all %>%
 csi_mry <- sunshine(csi_mry)
 
 write_rds(csi_mry, "csi_mry.rds")
+
+
+### Equity Multiplier -----
+
+
+
+
+
+em_all <- read_excel(here("data","lcffem23p1.xlsx"), 
+                      sheet = "23–24 P-1 LCFF EM School Data",
+                      range = "A4:R10167") %>%
+    janitor::clean_names("snake")
+
+em_mry <- em_all %>%
+    filter( county_code == 27,
+            str_detect(lcff_equity_multiplier_eligibility_determination_if_c_1_through_c_3_true_true_c_4, "TRUE")) %>%
+    mutate(cds = paste0(county_code, district_code,"0000000"  )) # This will need to be updated in future years for charter Equity Multiplier
+
+write_rds(em_mry, "em_mry.rds")
+
 
 
 ### Required Goals ------

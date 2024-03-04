@@ -1,0 +1,20 @@
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LWYSDHTBR3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LWYSDHTBR3');
+  
+  $(document).on('change', 'select', function(e) {
+  gtag('event', 'widget', {
+    action: 'select data',
+    label: $(e.currentTarget).val()
+  });
+});
+
+ $(document).on('click', 'button', function() {
+    gtag('event', 'button', { action: 'update report' });
+  });
+</script>

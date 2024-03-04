@@ -26,7 +26,9 @@ indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 lcap.reds <- read_rds("lcap_reds.rds")
+lcap.reds.pivot <- read_rds("lcap_reds_pivot.rds")
 csi_mry <- read_rds("csi_mry.rds")
+em_mry <- read_rds("em_mry.rds")
 undup.count <- read_rds("undup.rds")
 el.count <- read_rds("el.rds")
 ltel.count <- read_rds("ltel.rds")
@@ -62,6 +64,21 @@ joinder <- left_join(metrics, metrics_dist) %>%
                                              ), "black")
                               )
     )
+
+
+
+
+charter.school.codes <- c(
+"27102720112177" , # Monterey Bay Ch…
+"27102720116491" , # Open Door Chart…
+"27102720124297" , # Bay View Academy
+"27102722730232" , # Monterey County…
+"27102726119663" , # Oasis Charter P…
+"27660922730240" , # Learning for Li…
+"27751500118349" , # Big Sur Charter 
+"27660926118962"  # International S…
+    ) 
+
 
 # write_csv(joinder  ,here("output",paste0(metrics_dist[18,2]," data.csv" ) ))
 
@@ -185,7 +202,7 @@ As part of this response, identify all schools within the LEA receiving Equity M
 
 ------
 
-### Reflections: Lowest Performing 
+### Reflections: Lowest Performing
 
 As part of this response, the LEA must identify all schools, student groups and student groups at schools which are at the lowest performance level, which will remain unchanged during the three-year LCAP cycle. 
 
@@ -200,8 +217,6 @@ As part of this response, the LEA must identify all schools, student groups and 
 ### Dashboard Reds -----
 
 dist.name <- metrics_dist[4,2]
-
-print(dist.name)
 
 lcap.reds <- lcap.reds %>%
     filter(districtname == dist.name,
@@ -299,13 +314,28 @@ csi.words <- if ( length( csi$schoolname) > 0 ) paste0(combine_words( csi$school
 
 Consistent with statute, engagement should support comprehensive strategic planning, particularly to address and reduce disparities in opportunities and outcomes.  The following Educational Partners must be consulted:  
 
-+ Teachers, 
+
+
+```{r ed-partners, echo=FALSE, include=FALSE}
+
+
+ed.partner.words <- if ( dist %in% charter.school.codes ) " + Teachers, 
++ Principals, 
++ Administrators, 
++ Other school personnel, 
++ Parents, and 
++ Students" else "+ Teachers, 
 + Principals, 
 + Administrators, 
 + Other school personnel, 
 + Local bargaining units of the LEA, 
 + Parents, and 
-+ Students
++ Students"
+
+```
+
+
+`r ed.partner.words`
 
 A school district or COE receiving Equity Multiplier funds must also consult with educational partners at schools generating Equity Multiplier funds in the development of the LCAP, specifically, in the development of the required focus goal for each applicable school. 
 
@@ -315,27 +345,23 @@ A school district or COE receiving Equity Multiplier funds must also consult wit
 
 ### Required Goals: Equity Multiplier Schools 
 
-[Not yet available]
 
-```{r}
+```{r em, echo=FALSE, include=FALSE}
 
 
-req.goals.student2 <- req.goals.student %>%
-    filter(CDS == dist) %>%
-    select(groups = `Targeted Student Group(s)`)
+em <- em_mry %>% 
+    filter(cds == dist) 
 
-req.goals <- if ( length( req.goals.student2$groups) > 0 ) req.goals.student2$groups else
-                       "No student groups"
+em.words <- if ( length( em$school_name) > 0 ) paste0(combine_words( em$school_name), " have been identified as Equity Multiplier schools. 
+                                                      
+It is required to establish a Focus Goal addressing the qualifications for the equity multiplier school. It is also necessary to talk to your educational partners about the use of the funds. It is also required to identify all schools within the LEA receiving Equity multiplier funding in the [General Information] Section.
 
+Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional details.") else paste0("There are no schools in the district identified as Equity Multiplier schools.")
 
 ```
 
 
-`r req.goals` are required to have their own goal on your LCAP.  
-
-In addition, if you have an equity multiplier school, it is required to establish a Focus Goal addressing the qualifications for the equity multiplier school and student group. It is also necessary to talk to your educational partners about the use of the funds. It is also required to identify all schools within the LEA receiving Equity multiplier funding in the General Information Section.
-
-Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional details. 
+`r em.words`
 
 
 -------
@@ -344,10 +370,43 @@ Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional d
 
 LEAs are required to include actions for every Red indicator on their Dashboard for student groups, schools, or student groups at schools. 
 
-Note these are listed above in the Annual Performance section. 
+Note these are listed above in the [Reflections: Lowest Performing] section. 
 
 
-Insert cluster graphing???
+<details>
+
+<summary>[**Click here to display table**]{style="color:blue;"}</summary>
+
+```{r reds_pivot, echo=FALSE, include=TRUE, results = 'asis'}
+
+
+### Dashboard Reds -----
+
+dist.name <- metrics_dist[4,2]
+
+lcap.reds.pivot <- lcap.reds.pivot %>%
+    filter(districtname == dist.name,
+           
+           ) %>% 
+     select(-cds, -districtname) %>%
+    arrange(studentgroup.long)
+
+
+gt::gt(lcap.reds.pivot) |>
+        tab_header(title = "Red Student Groups and Indicators Clustered") |>
+      tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
+  cols_label(
+    studentgroup.long = html("Student Group"),
+ #   indicator = html("Indicator"),
+  #      schoolname = html("School Name"),
+
+  )
+
+```
+
+
+</details>
+
 
 
 -------
