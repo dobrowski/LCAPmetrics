@@ -7,14 +7,17 @@
 
   gtag('config', 'G-LWYSDHTBR3');
   
+
+
   $(document).on('change', 'select', function(e) {
   gtag('event', 'widget', {
     action: 'select data',
-    label: $(e.currentTarget).val()
+    label: $(e.currentTarget).val(),
+    value: $(e.currentTarget).val()
+    
   });
 });
 
- $(document).on('click', 'button', function() {
-    gtag('event', 'button', { action: 'update report' });
-  });
+
+
 </script>
