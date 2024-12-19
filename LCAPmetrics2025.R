@@ -14,7 +14,7 @@ library(readxl)
 library(glue)
 library(MCOE) # Toggle this on an off.  It doesn't work on shiny with this enabled
 
-yr <- 2024
+yr <- 2025
 
 options(scipen = 999)
 
@@ -65,8 +65,9 @@ metrics <- read_csv("metrics.csv") %>%
     mutate(notes = replace_na(notes, ""))
 
 
+mid.year.resources <- read_sheet("https://docs.google.com/spreadsheets/d/1rP9rp1w__o84QGq9alAygWeFXXRfa72W2krN0DTFK6c/edit?gid=0#gid=0")
 
-
+write_rds(mid.year.resources, "mid_year_resources.rds")
 
 ### Initial creation, now just import ----- 
 
@@ -197,60 +198,62 @@ write_rds(metrics, "metrics.rds")
 dashboard_mry <- tbl(con, "DASH_ALL") %>%
      filter(countyname == "Monterey",
             rtype == "D" | charter_flag == "Y",
-            reportingyear == (yr - 1)
+            reportingyear == (yr -1) 
     ) %>%  
     collect()  
 
 
-dashboard_mry <- sunshine(dashboard_mry)
+# dashboard_mry <- sunshine(dashboard_mry)
 
 
 write_rds(dashboard_mry, "dashboard_mry.rds")
 
-
-
+# This generates the LCAP Reds from 2023 but now just read the file.
+# 
 lcap.reds <- tbl(con, "DASH_ALL") %>%
     filter(countyname == "Monterey",
-           reportingyear == (yr - 1),
+           reportingyear == (2023),
            color == 1 | (indicator == "CCI" & statuslevel == 1 & currnsizemet == "Y" ),
            #       !is.na(currnsizemet)
-    ) %>%  
-    collect()  %>% 
+    ) %>%
+    collect()  %>%
     filter(cds %notin% single.school.codes) %>% # To Avoid duplication on Single School Districts
     mutate(schoolname = replace_na(schoolname, "Districtwide"),
-           districtname = if_else(!is.na(charter_flag), schoolname, districtname), 
+           districtname = if_else(!is.na(charter_flag), schoolname, districtname),
            ) %>%
     select(cds, districtname, schoolname,
- #          studentgroup ,
+           studentgroup ,
            studentgroup.long, indicator, currstatus) %>%
     arrange(indicator, studentgroup.long, schoolname)
-
-
-lcap.reds <- sunshine(lcap.reds)
-
-write_rds(lcap.reds, "lcap_reds.rds")
+# 
+# 
+# # lcap.reds <- sunshine(lcap.reds)
+# 
+# write_rds(lcap.reds, "lcap_reds.rds")
 
 
 cds.dist <- indicators %>%
     select(cds,districtname)
 
+clipr::write_clip(cds.dist)
 
-lcap.reds.pivot <- lcap.reds %>% 
-    select(districtname, studentgroup.long, schoolname, indicator) %>%
-    # Pivots to have indicator columns with lists of schools 
-    pivot_wider(names_from =  indicator,
-                values_from = schoolname
-    ) %>% 
-    rowwise() %>% 
-    # collapses the list columns to a string for the list of schools 
-    mutate(across(c(ELA, CHRO, MATH, SUSP, CCI, ELPI, GRAD ),  ~ paste(.x, collapse=', ') )
-    ) %>%
-    ungroup() %>%
-    left_join(cds.dist)
-
-
-
-write_rds(lcap.reds.pivot, "lcap_reds_pivot.rds")
+# 
+# lcap.reds.pivot <- lcap.reds %>% 
+#     select(districtname, studentgroup.long, schoolname, indicator) %>%
+#     # Pivots to have indicator columns with lists of schools 
+#     pivot_wider(names_from =  indicator,
+#                 values_from = schoolname
+#     ) %>% 
+#     rowwise() %>% 
+#     # collapses the list columns to a string for the list of schools 
+#     mutate(across(c(ELA, CHRO, MATH, SUSP, CCI, ELPI, GRAD ),  ~ paste(.x, collapse=', ') )
+#     ) %>%
+#     ungroup() %>%
+#     left_join(cds.dist)
+# 
+# 
+# 
+# write_rds(lcap.reds.pivot, "lcap_reds_pivot.rds")
 
 
 
@@ -266,13 +269,15 @@ lcap.reds2024 <- tbl(con, "DASH_ALL") %>%
     select(cds, studentgroup, indicator, status2024 = currstatus, color2024 = color)
 
 
+#lcap.reds <- read_rds("lcap_reds.rds")
+
 lcap.reds2024.joint <- lcap.reds %>%
     rename(status2023 = currstatus) %>%
     left_join(lcap.reds2024)
 
-write_sheet(lcap.reds2024.joint, "https://docs.google.com/spreadsheets/d/1-pibQDT9uAhU8uYGJeKSeE2gez3_pW8wBTzw4PKCBIU/edit?gid=0#gid=0")
+# write_sheet(lcap.reds2024.joint, "https://docs.google.com/spreadsheets/d/1-pibQDT9uAhU8uYGJeKSeE2gez3_pW8wBTzw4PKCBIU/edit?gid=0#gid=0")
 
-
+write_rds(lcap.reds2024.joint,"lcap_reds_into_2024.rds")
 
 
 
@@ -284,18 +289,18 @@ write_sheet(lcap.reds2024.joint, "https://docs.google.com/spreadsheets/d/1-pibQD
 
 ### CSI ------
 
-csi_all <- read_excel(here("data","essaassistance23.xlsx"), 
-                      sheet = "2023-24 ESSA State Schools",
-                      range = "A3:AI9949")
+csi_all <- read_excel(here("data","essaassistance24.xlsx"), 
+                      sheet = "2024-25 ESSA State Schools",
+                      range = "A3:AK10043")
 
 csi_mry <- csi_all %>%
     filter( str_extract(cds, "[1-9]{1,2}") == 27,
-            str_detect(AssistanceStatus2023, "CSI")) %>%
+            str_detect(AssistanceStatus2024, "CSI")) %>%
     mutate(cds = paste0(str_extract(cds, "[0-9]{1,7}"),"0000000"  )) # This will need to be updated in future years for charter CSI
 
 
 
-csi_mry <- sunshine(csi_mry)
+# csi_mry <- sunshine(csi_mry)
 
 write_rds(csi_mry, "csi_mry.rds")
 
@@ -303,7 +308,7 @@ write_rds(csi_mry, "csi_mry.rds")
 ### Equity Multiplier -----
 
 
-
+# Update in 2025 when available
 
 
 em_all <- read_excel(here("data","lcffem23p1.xlsx"), 
@@ -318,19 +323,6 @@ em_mry <- em_all %>%
 
 write_rds(em_mry, "em_mry.rds")
 
-
-
-### Required Goals ------
-
-# 
-# req.goals.student <- read_excel(here("data","leas2023perec52064.xlsx"), 
-#                                 range = "A6:C138") %>%
-#     filter(str_starts(CDS,"27"))
-# 
-# write_rds(req.goals.student, "req_goals_student.rds")
-# 
-
-# Need to Add Equity Multiplier when available
 
 
 
@@ -381,7 +373,9 @@ write_rds(em_mry, "em_mry.rds")
 
 
 
-dash.mry.da.2 <- read_excel(here("data","assistancestatus23.xlsx"), range = "A6:AD999", sheet = "District and COE 2023") %>%
+dash.mry.da.2 <- read_excel(here("data","assistancestatus24.xlsx"),
+                            range = "A6:AD999",
+                            sheet = "District and COE 2024") %>%
     filter(Countyname == "Monterey") %>%
     pivot_longer(cols = ends_with("priorities")) %>%
     mutate(indicator2 = case_when(value == "A" ~ "Met Criteria in Priority Areas 4 (Academic Indicators), 5 (Chronic Absenteeism and/or Graduation), and 6 (Suspensions)",
@@ -400,6 +394,7 @@ dash.mry.da.2 <- read_excel(here("data","assistancestatus23.xlsx"), range = "A6:
                                          name == "AIpriorities" ~	"American Indian or Alaska Native American",
                                          name == "ASpriorities" ~	"Asian American",
                                          name == "ELpriorities" ~	"English Learner",
+                                         name == "LTELpriorities" ~	"Long Term English Learner",
                                          name == "FIpriorities" ~	"Filipino",
                                          name == "FOSpriorities"	 ~ "Foster Youth",
                                          name == "HIpriorities" ~	"Hispanic",
@@ -415,15 +410,15 @@ dash.mry.da.2 <- read_excel(here("data","assistancestatus23.xlsx"), range = "A6:
 
 
 
-sun.dash.da <- dash.mry.da.2 %>%
-    filter(str_detect(LEAname, "Alisal")) %>%
-    mutate(LEAname = "Sunshine Union",
-           cds = "99999990000000")
-
-
-dash.mry.da.2 <- dash.mry.da.2 %>%
-    bind_rows(sun.dash.da)
-
+# sun.dash.da <- dash.mry.da.2 %>%
+#     filter(str_detect(LEAname, "Alisal")) %>%
+#     mutate(LEAname = "Sunshine Union",
+#            cds = "99999990000000")
+# 
+# 
+# dash.mry.da.2 <- dash.mry.da.2 %>%
+#     bind_rows(sun.dash.da)
+# 
 
 
 write_rds(dash.mry.da.2,"dash_mry_da.rds")
@@ -443,12 +438,16 @@ write_rds(dash.mry.da.2,"dash_mry_da.rds")
 
 pull.dash <- function(ind, col){
         dashboard_mry %>%
-        mutate(studentgroup = if_else(indicator == "ELPI",  "ALL", studentgroup)) %>%
+        mutate(studentgroup = if_else(indicator == "ELPI" & studentgroup == "EL",  "ALL", studentgroup)) %>%
         filter(studentgroup == "ALL",
                indicator == ind) %>%
         select(cds:countyname, charter_flag, currstatus)  %>%
         rename(!!col := currstatus)   # Note the :=  because of passing string to left side of argument
 }
+
+
+temp <- dashboard_mry %>%
+    filter(indicator == "ELPI")
 
 
 chronic <- pull.dash("CHRO","chronic")
@@ -465,21 +464,21 @@ elpi <- pull.dash("ELPI","elpi")
 
 
 caaspp.full <- tbl(con, "CAASPP") %>%
-    filter(Subgroup_ID == "1",
-           Test_Year == max(Test_Year),
-           County_Code == "27",
-           School_Code %in% c("0000000",charter.school.codes),
-           Grade == "13") %>%  
-    select(County_Code:Test_Id, Percentage_Standard_Met_and_Above) %>%
+    filter(subgroup_id == "1",
+           test_year == (yr -1),
+           county_code == "27",
+           school_code %in% c("0000000",charter.school.codes),
+           grade == "13") %>%  
+    select(county_code:test_id, percentage_standard_met_and_above) %>%
     collect()  
 
 
 caaspp <- caaspp.full %>%
-    mutate(cds = paste0(County_Code,District_Code,School_Code),
-           Percentage_Standard_Met_and_Above = as.numeric(Percentage_Standard_Met_and_Above)
+    mutate(cds = paste0(county_code,district_code,school_code),
+           percentage_standard_met_and_above = as.numeric(percentage_standard_met_and_above)
     ) %>%
-    select(cds, Test_Id ,Percentage_Standard_Met_and_Above) %>%
-    pivot_wider(names_from = Test_Id, values_from = Percentage_Standard_Met_and_Above ) %>%
+    select(cds, test_id ,percentage_standard_met_and_above) %>%
+    pivot_wider(names_from = test_id, values_from = percentage_standard_met_and_above ) %>%
     na.omit() %>%
     mutate(caaspp = glue("{round(`1`,1)}% in ELA and {round(`2`,1)}% in Math") ) %>%
     select(cds,caaspp)
@@ -487,17 +486,17 @@ caaspp <- caaspp.full %>%
 
 
 cast.full <- tbl(con, "CAST") %>%
-    filter(Demographic_ID == "1",
-           Test_Year == max(Test_Year),
-           County_Code == "27",
-           School_Code %in% c("0000000",charter.school.codes),
-           Grade == "13") %>%  
+    filter(demographic_id == "1",
+           test_year == (yr -1),
+           county_code == "27",
+           school_code %in% c("0000000",charter.school.codes),
+           grade == "13") %>%  
     collect()  
 
 
 cast <- cast.full %>%
-    transmute(cds = paste0(County_Code,District_Code,School_Code),
-           science = as.numeric(Percentage_Standard_Met_and_Above)
+    transmute(cds = paste0(county_code,district_code,school_code),
+           science = as.numeric(percentage_standard_met_and_above)
     ) # %>%
    # na.omit() 
 
@@ -534,7 +533,8 @@ cast <- cast.full %>%
 #   select(cds, ends_with("perc"))
 
 # Based on Dashboard additional report UC/CSU and CTE Met
-A_G <- read_sheet("https://docs.google.com/spreadsheets/d/1aX3sSlrWsOSyd9lzjME_fppAEbZE0EiXDkdYgygseAY/edit#gid=0") %>%
+A_G <- read_sheet("https://docs.google.com/spreadsheets/d/1aX3sSlrWsOSyd9lzjME_fppAEbZE0EiXDkdYgygseAY/edit#gid=0",
+                  sheet = "2024 Dashboard") %>%
     mutate(cds = as.character(cds))
 
 
@@ -556,25 +556,24 @@ AP <- dashboard_mry %>%
 # % at level 3 on Math  ;  % at level 3 on ELA 
 
 eap.full <- tbl(con, "CAASPP") %>%
-    filter(Subgroup_ID == "1",
-           Test_Year == max(Test_Year),
-           County_Code == "27",
-           School_Code %in% c("0000000",charter.school.codes),
-           Grade == "11") %>%  
-    select(County_Code:Test_Id, eap = Percentage_Standard_Met_and_Above) %>%
+    filter(subgroup_id == "1",
+           test_year == (yr -1),
+           county_code == "27",
+           school_code %in% c("0000000",charter.school.codes),
+           grade == "11") %>%  
+    select(county_code:test_id, eap = percentage_standard_met_and_above) %>%
     collect()  
 
 
 eap <- eap.full %>%
-    mutate(cds = paste0(County_Code,District_Code,School_Code),
+    mutate(cds = paste0(county_code,district_code,school_code),
            eap = as.numeric(eap)
            ) %>%
-    select(cds, Test_Id ,eap) %>%
-    pivot_wider(names_from = Test_Id, values_from = eap ) %>%
+    select(cds, test_id ,eap) %>%
+    pivot_wider(names_from = test_id, values_from = eap ) %>%
     na.omit() %>%
     mutate(eap = glue("{round(`1`,1)}% in ELA and {round(`2`,1)}% in Math") ) %>%
     select(cds,eap)
-
 
 
 
@@ -767,22 +766,20 @@ indicators <- indicators %>%
            )
 
 
-sunshine <- function(df) {
-    
-
-sun.df <- df %>%
-    filter(str_detect(districtname, "Alisal")) %>%
-    mutate(districtname = "Sunshine Union",
-           cds = "99999990000000")
-
-
-df %>%
-    bind_rows(sun.df)
-
-}
-
-
-indicators <- sunshine(indicators)
+# # sunshine <- function(df) {
+#     
+# 
+# sun.df <- df %>%
+#     filter(str_detect(districtname, "Alisal")) %>%
+#     mutate(districtname = "Sunshine Union",
+#            cds = "99999990000000")
+# 
+# 
+# df %>%
+#     bind_rows(sun.df)
+# 
+# }
+# # indicators <- sunshine(indicators)
 
 
 write_rds(indicators ,here("indicators.rds"))
@@ -897,11 +894,11 @@ ltel.count <- ltel.count.full %>%
     bind_rows(ltel.charter)
 
 
-
-ltel.count <- ltel.count %>%
-    filter(cds == "27659610000000") %>%
-    mutate(cds = "99999990000000") %>%
-    bind_rows(ltel.count)
+# 
+# ltel.count <- ltel.count %>%
+#     filter(cds == "27659610000000") %>%
+#     mutate(cds = "99999990000000") %>%
+#     bind_rows(ltel.count)
 
 
 

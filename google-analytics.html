@@ -10,7 +10,7 @@
 
 
   $(document).on('change', 'select', function(e) {
-  gtag('event', 'widget', {
+  gtag('event', $(e.currentTarget).val(), {
     action: 'select data',
     label: $(e.currentTarget).val(),
     value: $(e.currentTarget).val()

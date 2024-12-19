@@ -24,17 +24,44 @@ shinyServer(function(input, output) {
  
   #      tmp_file <- paste0(tempfile(), ".html") #Creating the temp where the .pdf is going to be stored
         
+# Working version but trying the tags$iframe        
+   #      output$report <- renderUI({
+   #          includeHTML(   
+   #      render("LCAPmetricsReport.Rmd", 
+   #             output_format = "all", 
+   # #            output_file = tmp_file,
+   #             params = param, 
+   #             envir = new.env(parent = globalenv()) 
+   #             )
+   #          )
+   #      })
+        
+        a <-  eventReactive(input$generate, {
+            
+            rmarkdown::render("LCAPmetricsReport.Rmd", 
+                                          output_format = "all",
+                              #            output_file = tmp_file,
+                                          params = param,
+                                          envir = new.env(parent = globalenv()) )
+            
+            tags$iframe(
+                src = base64enc::dataURI(file="LCAPmetricsReport.html", mime="text/html; charset=UTF-8"),
+                style="border:0; position:relative; top:0; left:0; right:0; bottom:0; width:100%; height:1800px"
+                
+            )
+            
+        })
+        
+        
         
         output$report <- renderUI({
-            includeHTML(   
-        render("LCAPmetricsReport.Rmd", 
-               output_format = "all", 
-   #            output_file = tmp_file,
-               params = param, 
-               envir = new.env(parent = globalenv()) 
-               )
-            )
+            a()
         })
+        
+        
+        
+        
+        
         
         
         

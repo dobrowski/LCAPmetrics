@@ -17,8 +17,11 @@ library(rmarkdown)
 library(knitr)
 library(tidyverse)
 library(glue)
-library(DT)
+# library(DT)
 library(gt)
+
+
+options(scipen=999)
 
 dist <- params$dist
 
@@ -26,6 +29,7 @@ indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 lcap.reds <- read_rds("lcap_reds.rds")
+lcap.reds.into.2024 <- read_rds("lcap_reds_into_2024.rds")
 lcap.reds.pivot <- read_rds("lcap_reds_pivot.rds")
 csi_mry <- read_rds("csi_mry.rds")
 em_mry <- read_rds("em_mry.rds")
@@ -34,7 +38,7 @@ el.count <- read_rds("el.rds")
 ltel.count <- read_rds("ltel.rds")
 dash.mry.da <- read_rds("dash_mry_da.rds")
 req.goals.student <- read_rds("req_goals_student.rds")
-
+mid.year.resources <- read_rds("mid_year_resources.rds")
 
 
 colorize <- function(x, color) {
@@ -87,15 +91,38 @@ charter.school.codes <- c(
 
 
 ---
-title: `r metrics_dist[4,2]` 2024-25 LCAP Metrics Report
+title: `r metrics_dist[4,2]` 2024-25 Student Success Portal
 ---
 
 
 ## Report Purpose
 
-The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
+The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data available to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
 
-Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2022-23 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
+Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2023-24 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
+
+
+-----------
+
+## Mid-Year Update Resources
+
+
+```{r midyear, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+mid.year.dist <- mid.year.resources %>%
+    mutate(cds = as.character(cds)) %>%
+        filter(cds == dist) 
+
+
+ dashboard_slides_address <- mid.year.dist$dashboard.slides
+ 
+midyear_slides_address <- mid.year.dist$midyear.slides
+ 
+tracker_sheets_address <- mid.year.dist$tracker.sheets
+
+
+cat("MCOE has created multiple Mid-Year Update resources that LEAs have the option of using.  These include a [Actions Tracking Sheet, a Metrics Tracking Sheet,](",tracker_sheets_address,") [Dashboard Summary Slide Deck](",dashboard_slides_address,") and [Sample Board Presentation Slide Deck](",midyear_slides_address,"). In addition the data on this webpage can be used to update and inform the board.")
+```
 
 
 
@@ -157,6 +184,24 @@ lea.sub.low <- dashboard_mry %>%
     left_join(studentgroups) %>%
     mutate(phrases = glue("{descriptive} youth for {long}"))
 
+
+
+
+undup.mets <- dashboard_mry %>%
+    filter(cds == dist,
+           !is.na(indicator),
+           studentgroup %in% c("EL","FOS","SED")) %>%
+    select(indicator, studentgroup, currstatus)  %>%
+    mutate(indicator = tolower(indicator)) %>%
+    mutate(indicator = if_else(indicator == "chro", "chronic", indicator)) %>%
+    left_join(ind_long_names) %>%
+    left_join(studentgroups, by = c("studentgroup" = "name")) %>%
+    select(long, descriptive, currstatus)
+
+
+
+
+
 # Blocked out for this year since not relevant
 
 redorange <- if ( length( lea.need$long) > 0 ) combine_words( lea.need$long) else
@@ -204,7 +249,7 @@ As part of this response, identify all schools within the LEA receiving Equity M
 
 ### Reflections: Lowest Performing
 
-As part of this response, the LEA must identify all schools, student groups and student groups at schools which are at the lowest performance level, which will remain unchanged during the three-year LCAP cycle. 
+As part of this response, the LEA must identify all schools, student groups and student groups at schools which were at the lowest performance level on the 2023 Dashboard. These student groups will remain unchanged during the three-year LCAP cycle and the most recent data is added to the table. 
 
 
 <details>
@@ -218,23 +263,34 @@ As part of this response, the LEA must identify all schools, student groups and 
 
 dist.name <- metrics_dist[4,2]
 
-lcap.reds <- lcap.reds %>%
+lcap.reds.into.2024 <- lcap.reds.into.2024 %>%
     filter(districtname == dist.name,
            
            ) %>% 
-     select(indicator, studentgroup.long, schoolname) %>%
+     select(indicator, studentgroup.long, schoolname, status2023, status2024) %>%
     arrange(indicator, studentgroup.long, schoolname)
 
 
-gt::gt(lcap.reds) |>
-        tab_header(title = "Red Student Groups and Indicators on Dashboard") |>
-      tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
-  cols_label(
-    studentgroup.long = html("Student Group"),
-    indicator = html("Indicator"),
-        schoolname = html("School Name"),
+# gt::gt(lcap.reds) |>
+#         tab_header(title = "Red Student Groups and Indicators on Dashboard") |>
+#       tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
+#   cols_label(
+#     studentgroup.long = html("Student Group"),
+#     indicator = html("Indicator"),
+#         schoolname = html("School Name"),
+#     currstatus = html("2023 Status")
+# 
+#   )
 
-  )
+
+
+DT::datatable(lcap.reds.into.2024,
+              rownames = FALSE,
+              colnames = c("Indicator","Student Group", "School Name", "2023 Status","2024 Status" ),
+              options = list(pageLength = 10)
+              )
+
+
 
 ```
 
@@ -271,14 +327,14 @@ da.need <- if ( length( da.dist$studentgroup.long) > 0 ) {
     indicator2 = html("Indicator"),
   )
     
-    } else "The District is not eligible for DA"
+    } else "The District is not eligible for technical assistance"
 
 
 # da.need2 <- if ( length( da.dist$studentgroup.long) > 0 ) print("You can find additional data at https://da-monterey.netlify.app/") else print("")
 
 if ( length( da.dist$studentgroup.long) > 0 ) {
     da.need
-    } else print("The District is not eligible for DA")
+    } else print("The District is not eligible for technical assistance")
 
 ```
 
@@ -319,17 +375,25 @@ Consistent with statute, engagement should support comprehensive strategic plann
 ```{r ed-partners, echo=FALSE, include=FALSE}
 
 
-ed.partner.words <- if ( dist %in% charter.school.codes ) " + Teachers, 
-+ Principals, 
-+ Administrators, 
-+ Other school personnel, 
-+ Parents, and 
-+ Students" else "+ Teachers, 
-+ Principals, 
-+ Administrators, 
-+ Other school personnel, 
-+ Local bargaining units of the LEA, 
-+ Parents, and 
+ed.partner.words <- if ( dist %in% charter.school.codes ) " + Teachers
++ Principals
++ Administrators
++ Other school personnel
++ Parents
++ Parent Advisory Committee
++ ELAC
++ DELAC
++ Special Education 
++ Students" else "+ Teachers
++ Principals
++ Administrators
++ Other school personnel
++ Local bargaining units of the LEA
++ Parents
++ Parent Advisory Committee
++ ELAC
++ DELAC
++ Special Education 
 + Students"
 
 ```
@@ -371,41 +435,6 @@ Please see https://www.cde.ca.gov/fg/aa/lc/equitymultiplier.asp for additional d
 LEAs are required to include actions for every Red indicator on their Dashboard for student groups, schools, or student groups at schools. 
 
 Note these are listed above in the [Reflections: Lowest Performing] section. 
-
-
-<details>
-
-<summary>[**Click here to display table**]{style="color:blue;"}</summary>
-
-```{r reds_pivot, echo=FALSE, include=TRUE, results = 'asis'}
-
-
-### Dashboard Reds -----
-
-dist.name <- metrics_dist[4,2]
-
-lcap.reds.pivot <- lcap.reds.pivot %>%
-    filter(districtname == dist.name,
-           
-           ) %>% 
-     select(-cds, -districtname) %>%
-    arrange(studentgroup.long)
-
-
-gt::gt(lcap.reds.pivot) |>
-        tab_header(title = "Red Student Groups and Indicators Clustered") |>
-      tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
-  cols_label(
-    studentgroup.long = html("Student Group"),
- #   indicator = html("Indicator"),
-  #      schoolname = html("School Name"),
-
-  )
-
-```
-
-
-</details>
 
 
 
@@ -515,15 +544,58 @@ undup.words <- glue( "The most recent percentage of unduplicated students from h
 `r undup.words`
 
 
+### Unduplicated Students' Latest Status
+
+This section is informational only to share the current dashboard status for unduplicated student groups.  This is not required to be entered into the LCAP, however, many LEAs choose to include it in support of their contributing actions. 
+
+<details>
+
+<summary>[**Click here to display table**]{style="color:green;"}</summary>
+
+```{r undups, echo=FALSE, include=TRUE, results = 'asis'}
+
+
+### Unduplicated Status -----
+
+
+# gt::gt(undup.mets) |>
+#         tab_header(title = "Unduplicated Students' Status on Dashboard") |>
+#       tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
+#   cols_label(
+#     long = html("Indicator"),
+#     descriptive = html("Student Group"),
+#     currstatus = html("2023 Status")
+# 
+#   )
+
+# 
+# 
+DT::datatable(undup.mets,
+              rownames = FALSE,
+              colnames = c("Indicator","Student Group", "2023 Status" ),
+              options = list(pageLength = 10)
+              )
+
+
+
+```
+
+
+</details>
+
+
+
+
 -----------
 
 ## Local Indicators 
 
 As a reminder, local indicators also need to be completed on the same timeline as LCAPs.  There are three required steps. 
 
-1. Reflect on each of the indicators.  It is highly recommended to use the self-reflection tools provided by the CDE at https://www.cde.ca.gov/ta/ac/cm/localindicators.asp
+1. Reflect on each of the indicators using local data and evidence you have gathered.  It is highly recommended to use the self-reflection tools provided by the CDE at https://www.cde.ca.gov/ta/ac/cm/localindicators.asp
 2. Present as a separate non-consent agenda item at the same governing board meeting as the LCAP is approved before the end of June. 
 3. Enter the information in myCDEconnect before the deadline (TBD) and be sure to enter the date they were presented to the board in June.  
+
 
 
 ----------
