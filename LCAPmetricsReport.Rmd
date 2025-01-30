@@ -29,6 +29,7 @@ indicators <- read_rds("indicators.rds")
 metrics <- read_rds("metrics.rds")
 dashboard_mry <- read_rds("dashboard_mry.rds")
 lcap.reds <- read_rds("lcap_reds.rds")
+lrebg <- read_rds("lrebg.rds")
 lcap.reds.into.2024 <- read_rds("lcap_reds_into_2024.rds")
 lcap.reds.pivot <- read_rds("lcap_reds_pivot.rds")
 csi_mry <- read_rds("csi_mry.rds")
@@ -100,6 +101,8 @@ title: `r metrics_dist[4,2]` 2024-25 Student Success Portal
 The purpose of this project is to provide all districts with as many of the required LCAP metrics as possible. It draws on public datasources including the California Dashboard and CDE's downloadable data files (https://www.cde.ca.gov/ds/sd/sd/). It is meant to save time looking things up, and is completely optional to use. Items with grey text and light brown background do not have publicly available data for your LEA, whereas items in black and the darker brown do have data available to present. Your LEA may not have data available because that indicator does not apply such as elementary districts and graduation rate. 
 
 Please note that the most recently available data is used, with a preference for the California Dashboard.  Additional data represented comes from DataQuest.  Most data reflect the 2023-24 school year, but in some case may represent the current school year or prior years. MCOE and CDE also encourage you to use current local data from your School Information System or other sources.  
+
+Please do not use Safari.  Important Data will only appear with Chrome or Firefox. 
 
 
 -----------
@@ -267,7 +270,7 @@ lcap.reds.into.2024 <- lcap.reds.into.2024 %>%
     filter(districtname == dist.name,
            
            ) %>% 
-     select(indicator, studentgroup.long, schoolname, status2023, status2024) %>%
+     select(indicator, studentgroup.long, schoolname, status2023, status2024, lrebg) %>%
     arrange(indicator, studentgroup.long, schoolname)
 
 
@@ -286,7 +289,7 @@ lcap.reds.into.2024 <- lcap.reds.into.2024 %>%
 
 DT::datatable(lcap.reds.into.2024,
               rownames = FALSE,
-              colnames = c("Indicator","Student Group", "School Name", "2023 Status","2024 Status" ),
+              colnames = c("Indicator","Student Group", "School Name", "2023 Status","2024 Status","Also LREBG Identified" ),
               options = list(pageLength = 10)
               )
 
@@ -296,6 +299,61 @@ DT::datatable(lcap.reds.into.2024,
 
 
 </details>
+
+
+
+------
+
+### Learning Recovering Emergency Block Grant (LREBG)
+
+As part of the LREBG, all LEAs with unexpended funds needs to conduct a needs assessment.  As part of the needs assessment, all student groups in the Low or Very Low STATUS (not color) according to the 5x5 (https://www.cde.ca.gov/ta/ac/cm/fivebyfivecolortables23.asp) need to be identified.  The following table identifies those schools and student groups for this part of the needs assessment.  Individual students will also need to be identified as per the Needs Assessment instructions.  
+
+
+<details>
+
+<summary>[**Click here to display table**]{style="color:pink;"}</summary>
+
+```{r lrebg, echo=FALSE, include=TRUE, results = 'asis'}
+
+
+### Dashboard Reds -----
+
+dist.name <- metrics_dist[4,2]
+
+lrebg.disp <- lrebg %>%
+    filter(districtname == dist.name,
+           
+           ) %>% 
+     select(indicator, studentgroup.long, schoolname, statuslevel, currstatus, changelevel ,change) %>%
+    arrange(indicator, studentgroup.long, schoolname)
+
+
+# gt::gt(lcap.reds) |>
+#         tab_header(title = "Red Student Groups and Indicators on Dashboard") |>
+#       tab_source_note(source_note = "Source: https://www.caschooldashboard.org/" ) |>
+#   cols_label(
+#     studentgroup.long = html("Student Group"),
+#     indicator = html("Indicator"),
+#         schoolname = html("School Name"),
+#     currstatus = html("2023 Status")
+# 
+#   )
+
+
+
+DT::datatable(lrebg.disp,
+              rownames = FALSE,
+              colnames = c("Indicator","Student Group", "School Name", "Status Level","2024 Status", "Change Level", "2024 Change" ),
+              options = list(pageLength = 10)
+              )
+
+
+
+```
+
+
+</details>
+
 
 
 

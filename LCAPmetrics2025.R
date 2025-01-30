@@ -282,6 +282,103 @@ write_rds(lcap.reds2024.joint,"lcap_reds_into_2024.rds")
 
 
 
+### LREBG -------
+
+
+
+
+dir <- tbl(con, "SCHOOL_DIR") %>%
+    collect() %>%
+    select(cds_code, soc_type, eil_code)
+
+
+lrebg.hs.chron <- tbl(con, "CHRONIC") %>%
+    filter(county_code == 27,
+           academic_year == "2023-24",
+           reporting_category == "TA",
+           aggregate_level == "S")  %>%  
+ #   head(20) %>%
+    collect() %>%
+    mutate(cds_code = paste0(county_code, district_code, school_code)) %>%
+    left_join(dir) %>%
+    filter(eil_code == "HS",
+           chronic_absenteeism_rate >= 10) %>%
+    mutate(studentgroup = "ALL", 
+           studentgroup.long = "All Students",
+           indicator = "CHRO"  ) %>%
+    select(cds = cds_code, 
+       studentgroup, 
+       indicator, 
+       districtname = district_name,
+       schoolname = school_name, 
+       rtype = aggregate_level, 
+       currstatus = chronic_absenteeism_rate)
+    
+
+
+lrebg <- tbl(con, "DASH_ALL") %>%
+    filter(countyname == "Monterey",
+           reportingyear == (2024),
+           statuslevel %in% c(1,2),
+           indicator %in% c("ELA","MATH","CHRO"),
+           rtype == "D" | (rtype == "S" & studentgroup == "ALL" )
+           # color == 1 | (indicator == "CCI" & statuslevel == 1 & currnsizemet == "Y" ),
+           #       !is.na(currnsizemet)
+    ) %>%  
+    collect() %>%
+    filter(cds %notin% single.school.codes) %>% # To Avoid duplication on Single School Districts
+    mutate(schoolname = replace_na(schoolname, "Districtwide"),
+           districtname = if_else(!is.na(charter_flag), schoolname, districtname),
+    ) %>%
+    select(cds, studentgroup, studentgroup.long , indicator, districtname, schoolname,  rtype, statuslevel, currstatus, changelevel  , change , color) %>%
+    filter(studentgroup != c("SBA","CAA" )) %>%
+    arrange(districtname, rtype, indicator ,studentgroup.long) %>%
+    mutate(lrebg = "lrebg") %>%
+    bind_rows(lrebg.hs.chron)  %>%
+    mutate(statuslevel = case_when(indicator == "ELA" & statuslevel == 1 ~ "Very Low",
+                                   indicator == "ELA" & statuslevel == 2 ~ "Low",
+                                   indicator == "MATH" & statuslevel == 1 ~ "Very Low",
+                                   indicator == "MATH" & statuslevel == 2 ~ "Low",
+                                   indicator == "CHRO" & statuslevel == 1 ~ "Very High",
+                                   indicator == "CHRO" & statuslevel == 2 ~ "High"),
+           
+           changelevel = case_when(indicator == "ELA" & changelevel == 1 ~ "Declined\nSignificantly",
+                                   indicator == "ELA" & changelevel == 2 ~ "Declined",
+                                   indicator == "ELA" & changelevel == 3 ~ "Maintained",
+                                   indicator == "ELA" & changelevel == 4 ~ "Increased",
+                                   indicator == "ELA" & changelevel == 5 ~ "Increased\nSignificantly",
+                                   
+                                   indicator == "MATH" & changelevel == 1 ~ "Declined\nSignificantly",
+                                   indicator == "MATH" & changelevel == 2 ~ "Declined",
+                                   indicator == "MATH" & changelevel == 3 ~ "Maintained",
+                                   indicator == "MATH" & changelevel == 4 ~ "Increased",
+                                   indicator == "MATH" & changelevel == 5 ~ "Increased\nSignificantly",
+                                   
+                                   indicator == "CHRO" & changelevel == 5 ~ "Declined\nSignificantly",
+                                   indicator == "CHRO" & changelevel == 4 ~ "Declined",
+                                   indicator == "CHRO" & changelevel == 3 ~ "Maintained",
+                                   indicator == "CHRO" & changelevel == 2 ~ "Increased",
+                                   indicator == "CHRO" & changelevel == 1 ~ "Increased\nSignificantly"
+           )
+                     
+                                   
+           )
+
+
+# Add sentence about sTstatus not color from 5x5 
+
+
+
+
+write_rds(lrebg,"lrebg.rds")
+
+
+
+lcap.reds.lrebg <- lcap.reds2024.joint %>%
+    left_join(lrebg)
+
+
+write_rds(lcap.reds.lrebg, "lcap_reds_into_2024.rds")
 
 
 
@@ -665,12 +762,13 @@ cred_rate <- tbl(con, "Teaching") %>%
             Teacher_Credential_Level == "ALL",
      # #      Charter_School %in% c("No","Yes") 
             ) %>%
-    collect() %>%
-    filter( ( Aggregate_Level == "D" &  Charter_School == "No" & DASS == "All" & School_Grade_Span == "ALL") |
-              ( Aggregate_Level == "S" &  Charter_School == "Yes"   ) 
+    collect()  %>%
+    filter(  ( Aggregate_Level == "D" &  Charter_School == "N" & DASS == "ALL" & School_Grade_Span == "ALL") |
+              ( Aggregate_Level == "S" &  Charter_School == "Y"   ) 
             ) %>%
-    mutate(School_Code = replace_na(School_Code, "0000000"),
-           School_Name = coalesce(School_Name, District_Name)
+    mutate(
+           School_Code = str_replace(School_Code,"NULL" ,"0000000"),
+           School_Name = if_else(School_Name == "NULL", District_Name, School_Name)
            ) %>%
     transmute( cds = paste0(County_Code,as.character(District_Code),School_Code),
            cred.rate.wt = Clear_FTE_percent
@@ -742,7 +840,8 @@ reclass <-  reclass.full %>%
 indicators <- list(   susp, exp , math, ela, 
                       caaspp, cast,
                       A_G, eap,  AP,
-                      chronic, elpi, grad, drop, reclass,
+                      chronic, elpi, grad, drop, 
+                      #reclass,
                       cred_rate) %>%
     reduce( left_join)
 
@@ -752,7 +851,7 @@ indicators <- indicators %>%
            cred.rate.wt = scales::percent( cred.rate.wt/100 , accuracy = .1 ),
            science = scales::percent( science/100 , accuracy = .1 ),
            elpi = scales::percent( elpi/100 , accuracy = .1 ),
-           reclass_rate = scales::percent( reclass_rate/100 , accuracy = .1 ),
+   #        reclass_rate = scales::percent( reclass_rate/100 , accuracy = .1 ),
            ap_perc = scales::percent( ap_perc/100 , accuracy = .1 ),
            ag_perc = scales::percent( ag_perc/100 , accuracy = .1 ),
            cte_perc = scales::percent( cte_perc/100 , accuracy = .1 ),
@@ -830,7 +929,8 @@ el.charter <- undup.count.full %>%
     filter(charter_school_y_n == "Yes") %>%
     transmute(el.count = english_learner_el,
         el.perc = english_learner_el/total_enrollment,
-              cds = glue('{county_code}{district_code}{school_code}') )
+              cds = glue('{county_code}{district_code}{school_code}') ) %>%
+    distinct()
 
 
 el.count <- undup.count.full %>%
