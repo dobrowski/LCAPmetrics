@@ -273,7 +273,8 @@ lcap.reds2024 <- tbl(con, "DASH_ALL") %>%
 
 lcap.reds2024.joint <- lcap.reds %>%
     rename(status2023 = currstatus) %>%
-    left_join(lcap.reds2024)
+    left_join(lcap.reds2024) %>%
+    mutate(difference =  round2(  status2023 - status2024, 1) )
 
 # write_sheet(lcap.reds2024.joint, "https://docs.google.com/spreadsheets/d/1-pibQDT9uAhU8uYGJeKSeE2gez3_pW8wBTzw4PKCBIU/edit?gid=0#gid=0")
 
@@ -302,12 +303,14 @@ lrebg.hs.chron <- tbl(con, "CHRONIC") %>%
     mutate(cds_code = paste0(county_code, district_code, school_code)) %>%
     left_join(dir) %>%
     filter(eil_code == "HS",
-           chronic_absenteeism_rate >= 10) %>%
+           chronic_absenteeism_rate >= 10,
+           !str_detect(school_name,"El Puente")) %>%
     mutate(studentgroup = "ALL", 
            studentgroup.long = "All Students",
            indicator = "CHRO"  ) %>%
     select(cds = cds_code, 
        studentgroup, 
+       studentgroup.long,
        indicator, 
        districtname = district_name,
        schoolname = school_name, 
@@ -383,6 +386,18 @@ write_rds(lcap.reds.lrebg, "lcap_reds_into_2024.rds")
 
 
 
+# LREBG Funds 
+
+lrebg.funds <- read_xlsx(here("data", "LREBG Interim Expenditure Data - LEAs Within Monterey COE With Outstanding Funds as of 01.20.25.xlsx"),
+                         skip = 1)  %>%
+    rename(cds = `CDS Code`, dist.name = `LEA Name`, balance = `Cash Balance`)
+    
+
+
+write_rds(lrebg.funds, "lrebg_funds.rds")
+
+
+
 
 ### CSI ------
 
@@ -405,11 +420,11 @@ write_rds(csi_mry, "csi_mry.rds")
 ### Equity Multiplier -----
 
 
-# Update in 2025 when available
+# Updated for 2024-25 
 
 
-em_all <- read_excel(here("data","lcffem23p1.xlsx"), 
-                      sheet = "23–24 P-1 LCFF EM School Data",
+em_all <- read_excel(here("data","lcffem24p1.xlsx"), 
+                      sheet = "24–25 P-1 LCFF EM School Data",
                       range = "A4:R10167") %>%
     janitor::clean_names("snake")
 
@@ -958,7 +973,7 @@ write_rds(el.count ,here("el.rds"))
 
 
 
-# LTEL Counts.
+# LTEL Counts -----
 
 
 ltel.count.full <- tbl(con, "ELAS") %>%
