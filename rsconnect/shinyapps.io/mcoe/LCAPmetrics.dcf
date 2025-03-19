@@ -5,8 +5,8 @@ account: mcoe
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1930451
-bundleId: 9546239
+bundleId: 9957776
 url: https://mcoe.shinyapps.io/LCAPmetrics/
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .Rapp.history|.RData|6c. State Priorities_Metrics (1).pdf|LCAP Metrics Support Draft.pdf|LCAPmetrics.R|LCAPmetrics2021.R|LCAPmetrics2022.R|LCAPmetrics2023.R|LCAPmetrics2024.R|LCAPmetrics2025.R|lows.R|REclassMCOE.R|server-bak.R|ui-bak.R|data|output|output2
+ignoredFiles: .Rapp.history|.RData|6c. State Priorities_Metrics (1).pdf|LCAP Metrics Support Draft.pdf|LCAP reds with estimates.R|LCAPmetrics.R|LCAPmetrics2021.R|LCAPmetrics2022.R|LCAPmetrics2023.R|LCAPmetrics2024.R|LCAPmetrics2025.R|LCAPmetricsReport.html|lows.R|REclassMCOE.R|server-bak.R|ui-bak.R|data|output|output2

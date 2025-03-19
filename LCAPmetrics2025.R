@@ -296,7 +296,7 @@ dir <- tbl(con, "SCHOOL_DIR") %>%
 lrebg.hs.chron <- tbl(con, "CHRONIC") %>%
     filter(county_code == 27,
            academic_year == "2023-24",
-           reporting_category == "TA",
+        #   reporting_category == "TA",
            aggregate_level == "S")  %>%  
  #   head(20) %>%
     collect() %>%
@@ -305,8 +305,25 @@ lrebg.hs.chron <- tbl(con, "CHRONIC") %>%
     filter(eil_code == "HS",
            chronic_absenteeism_rate >= 10,
            !str_detect(school_name,"El Puente")) %>%
-    mutate(studentgroup = "ALL", 
-           studentgroup.long = "All Students",
+    left_join_codebook("CHRONIC", "reporting_category") %>%
+    filter(reporting_category %in% c("RA" ,
+                                     "RB" ,
+                                     "RF" ,
+                                     "RH" ,
+                                     "RI" ,
+                                     "RP" ,
+                                     "RT" ,
+                                     "RW" ,
+                                     "SD" ,
+                                     "SE" ,
+                                     "SF" ,
+                                     "SH" ,
+                                     "SM",
+                                     "SS" ,
+                                     "TA")) %>%
+    
+    mutate(studentgroup = reporting_category, 
+           studentgroup.long = definition,
            indicator = "CHRO"  ) %>%
     select(cds = cds_code, 
        studentgroup, 
@@ -324,7 +341,7 @@ lrebg <- tbl(con, "DASH_ALL") %>%
            reportingyear == (2024),
            statuslevel %in% c(1,2),
            indicator %in% c("ELA","MATH","CHRO"),
-           rtype == "D" | (rtype == "S" & studentgroup == "ALL" )
+   #        rtype == "D" | (rtype == "S" & studentgroup == "ALL" )
            # color == 1 | (indicator == "CCI" & statuslevel == 1 & currnsizemet == "Y" ),
            #       !is.na(currnsizemet)
     ) %>%  
@@ -334,7 +351,7 @@ lrebg <- tbl(con, "DASH_ALL") %>%
            districtname = if_else(!is.na(charter_flag), schoolname, districtname),
     ) %>%
     select(cds, studentgroup, studentgroup.long , indicator, districtname, schoolname,  rtype, statuslevel, currstatus, changelevel  , change , color) %>%
-    filter(studentgroup != c("SBA","CAA" )) %>%
+    filter(studentgroup %notin% c("SBA","CAA" )) %>%
     arrange(districtname, rtype, indicator ,studentgroup.long) %>%
     mutate(lrebg = "lrebg") %>%
     bind_rows(lrebg.hs.chron)  %>%
@@ -375,6 +392,7 @@ lrebg <- tbl(con, "DASH_ALL") %>%
 
 write_rds(lrebg,"lrebg.rds")
 
+write_sheet(lrebg, "https://docs.google.com/spreadsheets/d/1iaH8492gNwk3fZUEoHIYBR_uE3OeXS1p9Ji64LKQUWk/edit?gid=0#gid=0")
 
 
 lcap.reds.lrebg <- lcap.reds2024.joint %>%
@@ -382,6 +400,254 @@ lcap.reds.lrebg <- lcap.reds2024.joint %>%
 
 
 write_rds(lcap.reds.lrebg, "lcap_reds_into_2024.rds")
+
+
+
+
+lrebg.pivot <- lrebg %>%
+    group_by(districtname, studentgroup.long, indicator) %>%
+    mutate(hold = 1) %>%
+    summarise(total = sum(hold)) %>%
+    
+    
+    # Pivots to have indicator columns with lists of schools
+    pivot_wider(names_from =  indicator,
+                values_from = total
+    ) 
+
+
+
+
+
+lrebg.school <- lrebg %>%
+    group_by(districtname, schoolname, indicator) %>%
+    mutate(hold = 1) %>%
+    summarise(total = sum(hold)) %>%
+    
+    
+    # Pivots to have indicator columns with lists of schools
+    pivot_wider(names_from =  indicator,
+                values_from = total
+    ) 
+
+
+write_sheet(ss = "https://docs.google.com/spreadsheets/d/1k7BHad3OoOuOgx7MYbnH8wpx1y6dMq3QqhNy9nRHd-A/edit?gid=0#gid=0",
+            sheet = "by group",
+            lrebg.pivot)
+
+write_sheet(ss = "https://docs.google.com/spreadsheets/d/1k7BHad3OoOuOgx7MYbnH8wpx1y6dMq3QqhNy9nRHd-A/edit?gid=0#gid=0",
+            sheet = "by school",
+            lrebg.school)
+
+# LREBG Heatmaps 
+
+
+lrebg.hs.chron.potential <- tbl(con, "CHRONIC") %>%
+    filter(county_code == 27,
+           academic_year == "2023-24",
+      #     reporting_category == "TA",
+           aggregate_level == "S")  %>%  
+    #   head(20) %>%
+    collect() %>%
+    mutate(cds_code = paste0(county_code, district_code, school_code)) %>%
+    left_join(dir) %>%
+    filter(eil_code == "HS",
+   #        chronic_absenteeism_rate >= 10,
+#           !str_detect(school_name,"El Puente")
+   )  %>%
+    left_join_codebook("CHRONIC", "reporting_category") %>%
+    filter(reporting_category %in% c("RA" ,
+                                     "RB" ,
+                                     "RF" ,
+                                     "RH" ,
+                                     "RI" ,
+                                     "RP" ,
+                                     "RT" ,
+                                     "RW" ,
+                                     "SD" ,
+                                     "SE" ,
+                                     "SF" ,
+                                     "SH" ,
+                                     "SS" ,
+                                     "TA")) %>%
+    mutate(definition = case_match(definition, 
+                                   "English Learners" ~ "English Learner",
+                                   "Hispanic or Latino" ~ "Hispanic",
+                                   "Homeless" ~ "Homeless Youth",
+                                   "Total" ~ "All Students",
+                                    "African American"  ~ "Black/African American",
+                                   "Two or More Races" ~ "Multiple Races/Two or More",
+                                   .default =  definition
+                                   )) %>%
+# Need to fix the student group but for spreckles for now it is ok. 
+      mutate(studentgroup = reporting_category, 
+             studentgroup.long = definition,
+             indicator = "CHRO"  ) %>%
+    filter(!is.na(chronic_absenteeism_rate)) %>%
+    select(cds = cds_code, 
+           studentgroup, 
+           studentgroup.long,
+           indicator, 
+           districtname = district_name,
+           schoolname = school_name, 
+           rtype = aggregate_level, 
+           currstatus = chronic_absenteeism_rate)
+
+
+lrebg.potential <- tbl(con, "DASH_ALL") %>%
+    filter(countyname == "Monterey",
+           reportingyear == (2024),
+   #        statuslevel %in% c(1,2),
+           indicator %in% c("ELA","MATH","CHRO"),
+           #        rtype == "D" | (rtype == "S" & studentgroup == "ALL" )
+           # color == 1 | (indicator == "CCI" & statuslevel == 1 & currnsizemet == "Y" ),
+           #       !is.na(currnsizemet)
+    ) %>%  
+    collect() %>%
+    filter(cds %notin% single.school.codes) %>% # To Avoid duplication on Single School Districts
+    mutate(schoolname = replace_na(schoolname, "Districtwide"),
+           districtname = if_else(!is.na(charter_flag), schoolname, districtname),
+    ) %>%
+    select(cds, studentgroup, studentgroup.long , indicator, districtname, schoolname,  rtype, statuslevel, currstatus, changelevel  , change , color) %>%
+    filter(studentgroup %notin% c("SBA","CAA" )) %>%
+    arrange(districtname, rtype, indicator ,studentgroup.long) %>%
+    mutate(lrebg = "lrebg") %>%
+    bind_rows(lrebg.hs.chron.potential)  
+           
+           
+
+
+lrebg.pivot.potential <- lrebg.potential %>%
+    group_by(districtname, studentgroup.long, indicator) %>%
+    mutate(hold = 1) %>%
+    summarise(total = sum(hold)) %>%
+    pivot_wider(names_from =  indicator,
+                names_prefix = "potential",
+                values_from = total
+    ) 
+
+
+
+pivot.join <- lrebg.pivot %>%
+    full_join(lrebg.pivot.potential) %>%
+    mutate(CHRO.rate = case_when(is.na(potentialCHRO) ~ NA,
+                                 is.na(CHRO) ~ 0,
+                                 TRUE ~ CHRO/ potentialCHRO),
+           ELA.rate = case_when(is.na(potentialELA) ~ NA,
+                                is.na(ELA) ~ 0,
+                                TRUE ~ ELA/ potentialELA ),
+           MATH.rate = case_when(is.na(potentialMATH) ~ NA,
+                                 is.na(MATH) ~ 0,
+                                 TRUE ~ MATH/ potentialMATH ),
+           CHRO.labl = case_when(is.na(potentialCHRO) ~ NA,
+                                   is.na(CHRO) ~ paste0("0 / ",potentialCHRO),
+                                   TRUE ~ paste0(CHRO," / ",potentialCHRO)),
+           ELA.labl = case_when(is.na(potentialELA) ~ NA,
+                                is.na(ELA) ~ paste0("0 / ",potentialELA),
+                                TRUE ~ paste0(ELA," / ",potentialELA)),
+           MATH.labl = case_when(is.na(potentialMATH) ~ NA,
+                                 is.na(MATH) ~ paste0("0 / ",potentialMATH),
+                                 TRUE ~ paste0(MATH," / ",potentialMATH))
+    )
+           
+
+
+
+
+pivot.join.comp <- pivot.join %>%
+    pivot_longer(cols = c("CHRO", "MATH", "ELA"))  %>%
+    pivot_longer(cols = c("CHRO.rate", "MATH.rate", "ELA.rate"),
+                 names_to = "rate.type",
+                 names_repair = "unique",
+                 values_to = "rate" ) %>%
+    pivot_longer(cols = c("CHRO.labl", "MATH.labl", "ELA.labl"),
+                 names_to = "lablr",
+                 names_repair = "unique",
+                 values_to = "labll" ) %>%
+    mutate(rate2 = str_sub(str_extract(rate.type, "^[^.]+")),
+           labl2 = str_sub(str_extract(lablr, "^[^.]+"))
+           ) %>%
+    filter(name == rate2,
+           name == labl2)
+
+
+    
+    
+pivot.join.comp %>%
+    filter(str_detect(districtname,"Alisal")) %>%
+    ggplot( aes(x = name , y = fct_rev(studentgroup.long), fill = rate, label = labll)) +
+    geom_tile() +
+    geom_text(color = "grey70") +
+    scale_fill_gradient2(low = "white", high = "red", mid = "pink",
+                  #       midpoint = median(df$rate, na.rm = TRUE),
+                         limit = c(0,1),
+                         space = "Lab",
+                         name="Rate") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(hjust = 1)) +
+    labs(title = "Heatmap of Student Groups in Low or Very Low Status",
+         subtitle = "Alisal Union",
+         x = "",
+         y = "")
+
+
+# school
+
+lrebg.school.potential <- lrebg.potential %>%
+    group_by(districtname, schoolname, indicator) %>%
+    mutate(hold = 1) %>%
+    summarise(total = sum(hold)) %>%
+    pivot_wider(names_from =  indicator,
+                names_prefix = "potential",
+                values_from = total
+    ) 
+
+
+
+pivot.join.school <- lrebg.school %>%
+    full_join(lrebg.school.potential) %>%
+    mutate(CHRO.rate = case_when(is.na(potentialCHRO) ~ NA,
+                                 is.na(CHRO) ~ 0,
+                                 TRUE ~ CHRO/ potentialCHRO),
+           ELA.rate = case_when(is.na(potentialELA) ~ NA,
+                                is.na(ELA) ~ 0,
+                                TRUE ~ ELA/ potentialELA ),
+           MATH.rate = case_when(is.na(potentialMATH) ~ NA,
+                                 is.na(MATH) ~ 0,
+                                 TRUE ~ MATH/ potentialMATH ),
+           CHRO.labl = case_when(is.na(potentialCHRO) ~ NA,
+                                 is.na(CHRO) ~ paste0("0 / ",potentialCHRO),
+                                 TRUE ~ paste0(CHRO," / ",potentialCHRO)),
+           ELA.labl = case_when(is.na(potentialELA) ~ NA,
+                                is.na(ELA) ~ paste0("0 / ",potentialELA),
+                                TRUE ~ paste0(ELA," / ",potentialELA)),
+           MATH.labl = case_when(is.na(potentialMATH) ~ NA,
+                                 is.na(MATH) ~ paste0("0 / ",potentialMATH),
+                                 TRUE ~ paste0(MATH," / ",potentialMATH))
+    )
+
+
+
+
+
+pivot.join.comp.school <- pivot.join.school %>%
+    pivot_longer(cols = c("CHRO", "MATH", "ELA"))  %>%
+    pivot_longer(cols = c("CHRO.rate", "MATH.rate", "ELA.rate"),
+                 names_to = "rate.type",
+                 names_repair = "unique",
+                 values_to = "rate" ) %>%
+    pivot_longer(cols = c("CHRO.labl", "MATH.labl", "ELA.labl"),
+                 names_to = "lablr",
+                 names_repair = "unique",
+                 values_to = "labll" ) %>%
+    mutate(rate2 = str_sub(str_extract(rate.type, "^[^.]+")),
+           labl2 = str_sub(str_extract(lablr, "^[^.]+"))
+    ) %>%
+    filter(name == rate2,
+           name == labl2)
+
+
+
 
 
 
